@@ -3,8 +3,6 @@
 #include <fstream>
 #include "mpegts_muxer.h"
 #include "mpegts_demuxer.h"
-#include "simple_buffer.h"
-#include "ts_packet.h"
 #include "flv_muxer.h"
 
 std::map<uint16_t, std::ofstream*> file_map;

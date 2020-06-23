@@ -62,6 +62,13 @@ add_library(mpegts STATIC IMPORTED)
 set_property(TARGET mpegts PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/mpegts/libmpegts.a)
 ```
 
+**Add header search paths ->**
+
+```
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mpegts/amf0/amf0/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mpegts/mpegts/)
+```
+
 **Link against the library ->**
 
 ```
@@ -82,7 +89,6 @@ Demuxer ->
 ```cpp
 
 #include "mpegts_demuxer.h"
-#include "ts_packet.h"
 
 //Create a input buffer
 SimpleBuffer in;
@@ -109,7 +115,6 @@ Muxer ->
 ```cpp
 
 #include "mpegts_muxer.h"
-#include "ts_packet.h"
 
 //AAC audio
 #define TYPE_AUDIO 0x0f

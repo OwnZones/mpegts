@@ -1,10 +1,13 @@
 #include <iostream>
 #include <memory>
 #include <fstream>
-#include "mpegts/mpegts_muxer.h"
-#include "mpegts/mpegts_demuxer.h"
-#include "mpegts/ts_packet.h"
+#include "mpegts_muxer.h"
+#include "mpegts_demuxer.h"
 
+//AAC audio
+#define TYPE_AUDIO 0x0f
+//H.264 video
+#define TYPE_VIDEO 0x1b
 
 int main(int argc, char *argv[])
 {
@@ -21,15 +24,12 @@ int main(int argc, char *argv[])
     demuxer.decode(&in, frame);
 
     if (frame) {
-
       std::cout << "GOT: " << unsigned(frame->mStreamType);
-
-      if (frame->mStreamType == 0x0f) {
+      if (frame->mStreamType == TYPE_AUDIO) {
         std::cout << " AAC Frame";
-      } else if (frame->mStreamType == 0x1b) {
+      } else if (frame->mStreamType == TYPE_VIDEO) {
         std::cout << " H.264 frame";
       }
-
       std::cout << std::endl;
     }
   }

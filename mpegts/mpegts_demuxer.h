@@ -7,10 +7,10 @@
 // l local scope
 
 #include "ts_packet.h"
+#include "simple_buffer.h"
 #include <stdint.h>
 #include <memory>
 #include <map>
-#include "simple_buffer.h"
 
 class SimpleBuffer;
 
