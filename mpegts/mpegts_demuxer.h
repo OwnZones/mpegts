@@ -9,7 +9,7 @@
 #include "ts_packet.h"
 #include "simple_buffer.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <map>
 

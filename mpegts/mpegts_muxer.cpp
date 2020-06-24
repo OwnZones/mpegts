@@ -1,6 +1,7 @@
 #include "mpegts_muxer.h"
 #include "crc.h"
 #include "common.h"
+#include <cstring>
 
 static const uint16_t MPEGTS_NULL_PACKET_PID = 0x1FFF;
 static const uint16_t MPEGTS_PAT_PID         = 0x0000;

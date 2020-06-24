@@ -6,7 +6,7 @@
 // r reference (&)
 // l local scope
 
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <string>
