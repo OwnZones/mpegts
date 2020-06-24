@@ -1,6 +1,4 @@
 #include "mpegts_demuxer.h"
-
-#include "simple_buffer.h"
 #include "common.h"
 
 MpegTsDemuxer::MpegTsDemuxer()
@@ -34,7 +32,6 @@ int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
 
                 mPatHeader.decode(pIn);
                 pIn->read_2bytes();
-
                 mPmtId = pIn->read_2bytes() & 0x1fff;
                 mPatIsValid = true;
 #ifdef DEBUG
@@ -137,18 +134,14 @@ int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
                 } else {
                     mTsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(), 188 - (pIn->pos() - lPos));
                 }
-
             }
         } else if (mPcrId != 0 && mPcrId == lTsHeader.mPid) {
             AdaptationFieldHeader lAdaptField;
             lAdaptField.decode(pIn);
             uint64_t lPcr = readPcr(pIn);
         }
-
         pIn->skip(188 - (pIn->pos() - lPos));
     }
-
     pIn->clear();
-
     return 0;
 }

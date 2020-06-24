@@ -1,14 +1,10 @@
 #include "mpegts_muxer.h"
-#include "simple_buffer.h"
-#include "ts_packet.h"
 #include "crc.h"
-#include <string.h>
 #include "common.h"
 
 static const uint16_t MPEGTS_NULL_PACKET_PID = 0x1FFF;
-static const uint16_t MPEGTS_PAT_PID = 0x00;
-static const uint16_t MPEGTS_PMT_PID = 0x100;
-static const uint16_t MPEGTS_PCR_PID = 0x110;
+static const uint16_t MPEGTS_PAT_PID         = 0x0000;
+static const uint16_t MPEGTS_PCR_PID         = 0x0110;
 
 MpegTsMuxer::MpegTsMuxer() {
 }
@@ -137,7 +133,7 @@ void MpegTsMuxer::createPes(TsFrame *pFrame, SimpleBuffer *pSb) {
 
                 lTsHeader.encode(&lPacket);
                 adapt_field_header.encode(&lPacket);
-                writePcr(&lPacket, pFrame->mDts);
+                writePcr(&lPacket, pFrame->mDts); //Fixme DTS??
             } else {
                 lTsHeader.encode(&lPacket);
             }
@@ -211,6 +207,7 @@ void MpegTsMuxer::createPes(TsFrame *pFrame, SimpleBuffer *pSb) {
     }
 }
 
+//Fixme PCR implementation needs to be changed
 void MpegTsMuxer::createPcr(SimpleBuffer *pSb) {
     uint64_t lPcr = 0;
     TsHeader lTsHeader;
@@ -234,7 +231,6 @@ void MpegTsMuxer::createPcr(SimpleBuffer *pSb) {
     lAdaptField.mTransportPrivateDataFlag = 0;
     lAdaptField.mAdaptationFieldExtensionFlag = 0;
 
-    char *p = pSb->data();
     lTsHeader.encode(pSb);
     lAdaptField.encode(pSb);
     writePcr(pSb, lPcr);
