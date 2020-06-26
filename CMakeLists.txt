@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(mpegts)
 set(CMAKE_CXX_STANDARD 17)
 
+find_package (Threads REQUIRED)
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
 #Include amf0
@@ -28,10 +30,10 @@ add_library(mpegts STATIC ${libfiles} ${CMAKE_CURRENT_SOURCE_DIR}/amf0/amf0/amf0
 add_dependencies(mpegts project_amf0)
 
 add_executable(mpeg_ts_tests ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-target_link_libraries(mpeg_ts_tests mpegts)
+target_link_libraries(mpeg_ts_tests mpegts Threads::Threads)
 
 add_executable(mpeg_ts_dmx_tests ${CMAKE_CURRENT_SOURCE_DIR}/main_dmx.cpp)
-target_link_libraries(mpeg_ts_dmx_tests mpegts)
+target_link_libraries(mpeg_ts_dmx_tests mpegts Threads::Threads)
 
 add_executable(mpeg_ts_mx_tests ${CMAKE_CURRENT_SOURCE_DIR}/main_mx.cpp)
-target_link_libraries(mpeg_ts_mx_tests mpegts)
+target_link_libraries(mpeg_ts_mx_tests mpegts Threads::Threads)
