@@ -161,4 +161,20 @@ tsOutBuffer.data()
 
 ```
 
-Example usage can be found here -> [Example multiplexer/demultiplexer](https://github.com/Unit-X/ts2efp)
+# Runing the included demux/mux example
+
+(Currently only MacOS and Linux)
+
+The tests has to be run in the order as described below
+
+* Generate 'bars.ts' file by running the script *./generate_bars.sh* . This generates the file to be used by the tests. The build instructions has to be followed also since the tests expect the file to ba available from the location ../bars.ts meaning the executables needs to be a directory level lower IE.. {source_root}/build/{test_file_location}
+
+* Run the demuxer *./mpeg_ts_dmx_tests* . The demuxer is demuxing all ES frames and generates one file per audio/video frame in the directory **bars_dmx**
+
+* Run the muxer *./mpeg_ts_mx_tests*. The multiplexer is assembling the frames from the demuxed files and generates a TS over UDP output on local host port 8100. In order to view the output you can for example use *ffplay udp://127.0.0.1:8100*
+
+
+
+   
+
+Example usage of the mux library can alse be seen here -> [Example multiplexer/demultiplexer](https://github.com/Unit-X/ts2efp)

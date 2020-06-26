@@ -2,3 +2,7 @@
 # CMake
 cmake-build-*/
 amf0/
+bars.ts
+bars_dmx/*
+!bars_dmx/readme.txt
+

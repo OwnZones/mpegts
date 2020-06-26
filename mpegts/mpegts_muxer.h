@@ -21,7 +21,6 @@ public:
 
     virtual ~MpegTsMuxer();
 
-public:
     void createPat(SimpleBuffer *pSb, uint16_t lPmtPid, uint8_t lCc);
 
     void createPmt(SimpleBuffer *pSb, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint8_t lCc);
@@ -39,7 +38,7 @@ private:
 
     bool shouldCreatePat();
 
-private:
     std::map<uint32_t, uint8_t> mPidCcMap;
+
 };
 

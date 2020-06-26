@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(mpegts)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
@@ -32,3 +32,6 @@ target_link_libraries(mpeg_ts_tests mpegts)
 
 add_executable(mpeg_ts_dmx_tests ${CMAKE_CURRENT_SOURCE_DIR}/main_dmx.cpp)
 target_link_libraries(mpeg_ts_dmx_tests mpegts)
+
+add_executable(mpeg_ts_mx_tests ${CMAKE_CURRENT_SOURCE_DIR}/main_mx.cpp)
+target_link_libraries(mpeg_ts_mx_tests mpegts)
