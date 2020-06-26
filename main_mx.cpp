@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <thread>
+#include <mutex>
 #include <functional>
 #include "kissnet/kissnet.hpp"
 #include "mpegts_muxer.h"
