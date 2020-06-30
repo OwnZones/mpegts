@@ -15,8 +15,8 @@ class SimpleBuffer;
 
 class MpegTsStream {
 public:
-    static const uint8_t AAC = 0x0f;
-    static const uint8_t AVC = 0x1b;
+    static const uint8_t AAC = 0x0f;  //For FLV muxer leave for now
+    static const uint8_t AVC = 0x1b;  //For FLV muxer leave for now
 };
 
 class TsFrame {
@@ -27,16 +27,15 @@ public:
 
     virtual ~TsFrame() {};
 
-public:
     bool empty();
 
     void reset();
 
-public:
     std::shared_ptr<SimpleBuffer> mData;
     uint64_t mPts;
     uint64_t mDts;
     uint64_t mPcr;
+    uint8_t mRandomAccess;
     uint8_t mStreamType;
     uint8_t mStreamId;
     uint16_t mPid;
@@ -50,12 +49,10 @@ public:
 
     virtual ~TsHeader();
 
-public:
     void encode(SimpleBuffer *sb);
 
     void decode(SimpleBuffer *pSb);
 
-public:
     uint8_t mSyncByte;                      // 8 bits
     uint8_t mTransportErrorIndicator;      // 1 bit
     uint8_t mPayloadUnitStartIndicator;   // 1 bit
@@ -72,14 +69,12 @@ public:
 
     virtual ~PATHeader();
 
-public:
     void encode(SimpleBuffer *pSb);
 
     void decode(SimpleBuffer *pSb);
 
     void print();
 
-public:
     uint8_t mTableId;                       // 8 bits
     uint8_t mSectionSyntaxIndicator;       // 1 bit
     uint8_t mB0;                             // 1 bit
@@ -101,7 +96,6 @@ public:
 
     virtual ~PMTElementInfo();
 
-public:
     void encode(SimpleBuffer *pSb);
 
     void decode(SimpleBuffer *sb);
@@ -110,7 +104,6 @@ public:
 
     void print();
 
-public:
     uint8_t mStreamType;                    // 8 bits
     uint8_t mReserved0;                      // 3 bits
     uint16_t mElementaryPid;                // 13 bits
@@ -125,7 +118,6 @@ public:
 
     virtual ~PMTHeader();
 
-public:
     void encode(SimpleBuffer *pSb);
 
     void decode(SimpleBuffer *pSb);
@@ -134,7 +126,6 @@ public:
 
     void print();
 
-public:
     uint8_t mTableId;                       // 8 bits
     uint8_t mSectionSyntaxIndicator;       // 1 bit
     uint8_t mB0;                             // 1 bit
@@ -159,12 +150,10 @@ public:
 
     virtual ~AdaptationFieldHeader();
 
-public:
     void encode(SimpleBuffer *pSb);
 
     void decode(SimpleBuffer *pAb);
 
-public:
     uint8_t mAdaptationFieldLength;                // 8 bits
     uint8_t mAdaptationFieldExtensionFlag;        // 1 bit
     uint8_t mTransportPrivateDataFlag;            // 1 bit
@@ -182,12 +171,10 @@ public:
 
     virtual ~PESHeader();
 
-public:
     void encode(SimpleBuffer *pSb);
 
     void decode(SimpleBuffer *pSb);
 
-public:
     uint32_t mPacketStartCode;             // 24 bits
     uint8_t mStreamId;                      // 8 bits
     uint16_t mPesPacketLength;             // 16 bits

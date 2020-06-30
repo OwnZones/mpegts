@@ -29,9 +29,6 @@ file(GLOB libfiles ${CMAKE_CURRENT_SOURCE_DIR}/mpegts/*.cpp)
 add_library(mpegts STATIC ${libfiles} ${CMAKE_CURRENT_SOURCE_DIR}/amf0/amf0/amf0.cpp ${CMAKE_CURRENT_SOURCE_DIR}/amf0/amf0/simple_buffer.cpp)
 add_dependencies(mpegts project_amf0)
 
-add_executable(mpeg_ts_tests ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-target_link_libraries(mpeg_ts_tests mpegts Threads::Threads)
-
 add_executable(mpeg_ts_dmx_tests ${CMAKE_CURRENT_SOURCE_DIR}/main_dmx.cpp)
 target_link_libraries(mpeg_ts_dmx_tests mpegts Threads::Threads)
 

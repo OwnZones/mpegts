@@ -11,6 +11,15 @@
 #include "kissnet/kissnet.hpp"
 #include "mpegts_muxer.h"
 
+//If defined save TS data to file
+#define SAVE_TO_FILE
+#ifdef SAVE_TO_FILE
+#define SAVED_NUM_FRAMES 100*25
+std::ofstream oMpegTs("../output.ts", std::ofstream::binary | std::ofstream::out);
+int savedOutputFrames = {0};
+bool savingFrames = {true};
+#endif
+
 //AAC audio
 #define TYPE_AUDIO 0x0f
 //H.264 video
@@ -41,16 +50,43 @@ uint64_t gFirstPts = 0;
 uint64_t gPtsLoopDuration = 0;
 
 //Create the multiplexer
-MpegTsMuxer gMuxer;
-std::map<uint8_t, int> gStreamPidMap;
+MpegTsMuxer *gpMuxer;
 std::mutex gEncMtx;
+
+uint8_t* findNal(uint8_t *start, uint8_t *end)
+{
+    uint8_t *p = start;
+
+    /* Simply lookup "0x000001" pattern */
+    while (p <= end-3 && (p[0] || p[1] || p[2]!=1))
+        ++p;
+
+    if (p > end-3)
+        /* No more NAL unit in this bitstream */
+        return nullptr;
+
+    /* Include 8 bits leading zero */
+    //if (p>start && *(p-1)==0)
+    //    return (p-1);
+
+    return p;
+}
 
 void muxOutput(TsFrame &rFrame){
     std::lock_guard<std::mutex> lock(gEncMtx);
+
+#ifdef SAVE_TO_FILE
+    if (savedOutputFrames++ == SAVED_NUM_FRAMES) {
+        savingFrames = false;
+        oMpegTs.close();
+        std::cout << "Stopped saving to file." << std::endl;
+    }
+#endif
+
     //Create your TS-Buffer
     SimpleBuffer lTsOutBuffer;
     //Multiplex your data
-    gMuxer.encode(&rFrame, gStreamPidMap, PMT_PID, &lTsOutBuffer);
+    gpMuxer->encode(&rFrame, &lTsOutBuffer);
 
     //Double to fail at non integer data and be able to visualize in the print-out
     double packets = (double)lTsOutBuffer.size() / 188.0;
@@ -58,6 +94,11 @@ void muxOutput(TsFrame &rFrame){
     char* lpData = lTsOutBuffer.data();
     for (int lI = 0 ; lI < packets ; lI++) {
         mpegTsOut.send((const std::byte *)lpData+(lI*188), 188);
+    #ifdef SAVE_TO_FILE
+        if (savingFrames) {
+            oMpegTs.write(lpData + (lI * 188), 188);
+        }
+    #endif
     }
     lTsOutBuffer.clear(); //Not needed
 }
@@ -74,6 +115,7 @@ void fakeAudioEncoder() {
     uint64_t lCurrentOffset = 0;
     TsFrame lTsFrame;
 
+    //The loop counter is there to silence my compilers infinitive loop warning.
     uint64_t lLoopCounter = UINT64_MAX;
     while (lLoopCounter) {
         std::this_thread::sleep_for(std::chrono::microseconds(500));
@@ -110,6 +152,7 @@ void fakeAudioEncoder() {
                 lTsFrame.mStreamId = 192;
                 lTsFrame.mPid = AUDIO_PID;
                 lTsFrame.mExpectedPesPacketLength = 0;
+                lTsFrame.mRandomAccess = 0x01;
                 lTsFrame.mCompleted = true;
 
                 muxOutput(lTsFrame);
@@ -128,8 +171,6 @@ void fakeAudioEncoder() {
 
         }
     }
-
-
 }
 
 void fakeVideoEncoder() {
@@ -182,6 +223,18 @@ void fakeVideoEncoder() {
                 nalFile.read (videoNal, lFileSize);
                 nalFile.close();
 
+                uint8_t lIdrFound = 0x00;
+                uint8_t *lpNalStart = (uint8_t *) videoNal;
+                while (true) {
+                    lpNalStart = findNal(lpNalStart, (uint8_t *) videoNal + lFileSize);
+                    if (lpNalStart == nullptr) break;
+                    uint8_t startcode = lpNalStart[3] & 0x1f;
+                    if (startcode == 0x05) {
+                        lIdrFound = 0x01;
+                    }
+                    lpNalStart++;
+                }
+
                 uint64_t lRecalcPts = lPts + lCurrentOffset;
                 uint64_t lRecalcDts = lDts + lCurrentOffset;
 
@@ -194,6 +247,7 @@ void fakeVideoEncoder() {
                 lTsFrame.mStreamId = 224;
                 lTsFrame.mPid = VIDEO_PID;
                 lTsFrame.mExpectedPesPacketLength = 0;
+                lTsFrame.mRandomAccess = lIdrFound;
                 lTsFrame.mCompleted = true;
 
                 muxOutput(lTsFrame);
@@ -216,8 +270,10 @@ void fakeVideoEncoder() {
 int main(int argc, char *argv[]) {
     std::cout << "TS - muxlib test " << std::endl;
 
+    std::map<uint8_t, int> gStreamPidMap;
     gStreamPidMap[TYPE_AUDIO] = AUDIO_PID;
     gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
+    gpMuxer = new MpegTsMuxer(gStreamPidMap, PMT_PID, VIDEO_PID);
 
     std::string lStartPTS;
     std::string lEndPTS;
@@ -260,5 +316,7 @@ int main(int argc, char *argv[]) {
     }
 
     //Will never execute
+   delete gpMuxer;
+
     return EXIT_SUCCESS;
 }

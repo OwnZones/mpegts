@@ -17,7 +17,7 @@ class TsFrame;
 
 class MpegTsMuxer {
 public:
-    MpegTsMuxer();
+    MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid);
 
     virtual ~MpegTsMuxer();
 
@@ -31,7 +31,7 @@ public:
 
     void createNull(SimpleBuffer *pSb);
 
-    void encode(TsFrame *pFrame, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, SimpleBuffer *pSb);
+    void encode(TsFrame *pFrame, SimpleBuffer *pSb);
 
 private:
     uint8_t getCc(uint32_t lWithPid);
@@ -39,6 +39,12 @@ private:
     bool shouldCreatePat();
 
     std::map<uint32_t, uint8_t> mPidCcMap;
+
+    uint16_t mPmtPid = 0;
+
+    std::map<uint8_t, int> mStreamPidMap;
+
+    uint16_t mPcrPid;
 
 };
 

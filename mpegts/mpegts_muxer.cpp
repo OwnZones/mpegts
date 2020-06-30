@@ -7,7 +7,12 @@ static const uint16_t MPEGTS_NULL_PACKET_PID = 0x1FFF;
 static const uint16_t MPEGTS_PAT_PID         = 0x0000;
 static const uint16_t MPEGTS_PCR_PID         = 0x0110;
 
-MpegTsMuxer::MpegTsMuxer() {
+MpegTsMuxer::MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid) {
+
+    mPmtPid = lPmtPid;
+    mStreamPidMap = lStreamPidMap;
+    mPcrPid = lPcrPid;
+
 }
 
 MpegTsMuxer::~MpegTsMuxer() {
@@ -91,11 +96,9 @@ void MpegTsMuxer::createPmt(SimpleBuffer *pSb, std::map<uint8_t, int> lStreamPid
     lPmtHeader.mReserved2 = 0x7;
     lPmtHeader.mReserved3 = 0xf;
     lPmtHeader.mProgramInfoLength = 0;
+    lPmtHeader.mPcrPid = mPcrPid;
     for (auto lIt = lStreamPidMap.begin(); lIt != lStreamPidMap.end(); lIt++) {
         lPmtHeader.mInfos.push_back(std::shared_ptr<PMTElementInfo>(new PMTElementInfo(lIt->first, lIt->second)));
-        if (lIt->first == MpegTsStream::AVC) {
-            lPmtHeader.mPcrPid = lIt->second;
-        }
     }
 
     uint16_t lSectionLength = lPmtHeader.size() - 3 + 4;
@@ -125,11 +128,11 @@ void MpegTsMuxer::createPes(TsFrame *pFrame, SimpleBuffer *pSb) {
 
         if (lFirst) {
             lTsHeader.mPayloadUnitStartIndicator = 0x01;
-            if (pFrame->mStreamType == MpegTsStream::AVC) {
+            if (pFrame->mPid == mPcrPid) {
                 lTsHeader.mAdaptationFieldControl |= 0x02;
                 AdaptationFieldHeader adapt_field_header;
                 adapt_field_header.mAdaptationFieldLength = 0x07;
-                adapt_field_header.mRandomAccessIndicator = 0x01;
+                adapt_field_header.mRandomAccessIndicator = pFrame->mRandomAccess;
                 adapt_field_header.mPcrFlag = 0x01;
 
                 lTsHeader.encode(&lPacket);
@@ -250,11 +253,11 @@ void MpegTsMuxer::createNull(SimpleBuffer *pSb) {
     lTsHeader.encode(pSb);
 }
 
-void MpegTsMuxer::encode(TsFrame *pFrame, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, SimpleBuffer *pSb) {
+void MpegTsMuxer::encode(TsFrame *pFrame, SimpleBuffer *pSb) {
     if (shouldCreatePat()) {
         uint8_t lPatPmtCc = getCc(0);
-        createPat(pSb, lPmtPid, lPatPmtCc);
-        createPmt(pSb, lStreamPidMap, lPmtPid, lPatPmtCc);
+        createPat(pSb, mPmtPid, lPatPmtCc);
+        createPmt(pSb, mStreamPidMap, mPmtPid, lPatPmtCc);
     }
 
     createPes(pFrame, pSb);
