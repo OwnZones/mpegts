@@ -20,7 +20,7 @@ public:
     virtual ~MpegTsDemuxer();
 
 public:
-    int decode(SimpleBuffer *pIn, EsFrame *&prOut);
+    int decode(SimpleBuffer &rIn, EsFrame *&prOut);
 
     // stream, pid
     std::map<uint8_t, int> mStreamPidMap;

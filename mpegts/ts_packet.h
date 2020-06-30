@@ -49,9 +49,9 @@ public:
 
     virtual ~TsHeader();
 
-    void encode(SimpleBuffer *sb);
+    void encode(SimpleBuffer &rSb);
 
-    void decode(SimpleBuffer *pSb);
+    void decode(SimpleBuffer &rSb);
 
     uint8_t mSyncByte;                      // 8 bits
     uint8_t mTransportErrorIndicator;      // 1 bit
@@ -69,9 +69,9 @@ public:
 
     virtual ~PATHeader();
 
-    void encode(SimpleBuffer *pSb);
+    void encode(SimpleBuffer &rSb);
 
-    void decode(SimpleBuffer *pSb);
+    void decode(SimpleBuffer &rSb);
 
     void print();
 
@@ -96,9 +96,9 @@ public:
 
     virtual ~PMTElementInfo();
 
-    void encode(SimpleBuffer *pSb);
+    void encode(SimpleBuffer &rSb);
 
-    void decode(SimpleBuffer *sb);
+    void decode(SimpleBuffer &rSb);
 
     uint16_t size();
 
@@ -118,9 +118,9 @@ public:
 
     virtual ~PMTHeader();
 
-    void encode(SimpleBuffer *pSb);
+    void encode(SimpleBuffer &rSb);
 
-    void decode(SimpleBuffer *pSb);
+    void decode(SimpleBuffer &rSb);
 
     uint16_t size();
 
@@ -150,9 +150,9 @@ public:
 
     virtual ~AdaptationFieldHeader();
 
-    void encode(SimpleBuffer *pSb);
+    void encode(SimpleBuffer &rSb);
 
-    void decode(SimpleBuffer *pAb);
+    void decode(SimpleBuffer &rSb);
 
     uint8_t mAdaptationFieldLength;                // 8 bits
     uint8_t mAdaptationFieldExtensionFlag;        // 1 bit
@@ -171,9 +171,9 @@ public:
 
     virtual ~PESHeader();
 
-    void encode(SimpleBuffer *pSb);
+    void encode(SimpleBuffer &rSb);
 
-    void decode(SimpleBuffer *pSb);
+    void decode(SimpleBuffer &rSb);
 
     uint32_t mPacketStartCode;             // 24 bits
     uint8_t mStreamId;                      // 8 bits

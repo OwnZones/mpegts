@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
         ifile.read(packet, 188);
         in.append(packet, 188);
         EsFrame *frame = nullptr;
-        demuxer.decode(&in, frame);
+        demuxer.decode(in, frame);
 
         if (frame) {
             if (frame->mStreamType == TYPE_AUDIO) {

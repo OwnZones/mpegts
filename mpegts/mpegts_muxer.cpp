@@ -6,18 +6,17 @@
 static const uint16_t MPEGTS_NULL_PACKET_PID = 0x1FFF;
 static const uint16_t MPEGTS_PAT_PID         = 0x0000;
 
-MpegTsMuxer::MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid) {
-
+MpegTsMuxer::MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid,  MuxType lType) {
     mPmtPid = lPmtPid;
     mStreamPidMap = lStreamPidMap;
     mPcrPid = lPcrPid;
-
+    mMuxType = lType;
 }
 
 MpegTsMuxer::~MpegTsMuxer() {
 }
 
-void MpegTsMuxer::createPat(SimpleBuffer *pSb, uint16_t lPmtPid, uint8_t lCc) {
+void MpegTsMuxer::createPat(SimpleBuffer &rSb, uint16_t lPmtPid, uint8_t lCc) {
     SimpleBuffer lPatSb;
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
@@ -51,9 +50,9 @@ void MpegTsMuxer::createPat(SimpleBuffer *pSb, uint16_t lPmtPid, uint8_t lCc) {
     unsigned int lSectionLength = 4 + 4 + 5;
     lPatHeader.mSectionLength = lSectionLength & 0x3ff;
 
-    lTsHeader.encode(&lPatSb);
-    lAdaptField.encode(&lPatSb);
-    lPatHeader.encode(&lPatSb);
+    lTsHeader.encode(lPatSb);
+    lAdaptField.encode(lPatSb);
+    lPatHeader.encode(lPatSb);
     lPatSb.write_2bytes(lProgramNumber);
     lPatSb.write_2bytes(lProgramMapPid);
 
@@ -63,10 +62,10 @@ void MpegTsMuxer::createPat(SimpleBuffer *pSb, uint16_t lPmtPid, uint8_t lCc) {
 
     std::string lStuff(188 - lPatSb.size(), 0xff);
     lPatSb.write_string(lStuff);
-    pSb->append(lPatSb.data(), lPatSb.size());
+    rSb.append(lPatSb.data(), lPatSb.size());
 }
 
-void MpegTsMuxer::createPmt(SimpleBuffer *pSb, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint8_t lCc) {
+void MpegTsMuxer::createPmt(SimpleBuffer &rSb, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint8_t lCc) {
     SimpleBuffer lPmtSb;
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
@@ -103,51 +102,51 @@ void MpegTsMuxer::createPmt(SimpleBuffer *pSb, std::map<uint8_t, int> lStreamPid
     uint16_t lSectionLength = lPmtHeader.size() - 3 + 4;
     lPmtHeader.mSectionLength = lSectionLength & 0x3ff;
 
-    lTsHeader.encode(&lPmtSb);
-    lAdaptField.encode(&lPmtSb);
-    lPmtHeader.encode(&lPmtSb);
+    lTsHeader.encode(lPmtSb);
+    lAdaptField.encode(lPmtSb);
+    lPmtHeader.encode(lPmtSb);
 
     // crc32
     uint32_t crc_32 = crc32((uint8_t *)lPmtSb.data() + 5, lPmtSb.size() - 5);
     lPmtSb.write_4bytes(crc_32);
     std::string stuff(188 - lPmtSb.size(), 0xff);
     lPmtSb.write_string(stuff);
-    pSb->append(lPmtSb.data(), lPmtSb.size());
+    rSb.append(lPmtSb.data(), lPmtSb.size());
 }
 
-void MpegTsMuxer::createPes(EsFrame *pFrame, SimpleBuffer *pSb) {
+void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
     bool lFirst = true;
-    while (!pFrame->mData->empty()) {
+    while (!rFrame.mData->empty()) {
         SimpleBuffer lPacket;
 
         TsHeader lTsHeader;
-        lTsHeader.mPid = pFrame->mPid;
+        lTsHeader.mPid = rFrame.mPid;
         lTsHeader.mAdaptationFieldControl = MpegTsAdaptationFieldType::mPayloadOnly;
-        lTsHeader.mContinuityCounter = getCc(pFrame->mStreamType);
+        lTsHeader.mContinuityCounter = getCc(rFrame.mStreamType);
 
         if (lFirst) {
             lTsHeader.mPayloadUnitStartIndicator = 0x01;
-            if (pFrame->mPid == mPcrPid) {
+            if (rFrame.mPid == mPcrPid) {
                 lTsHeader.mAdaptationFieldControl |= 0x02;
                 AdaptationFieldHeader adapt_field_header;
                 adapt_field_header.mAdaptationFieldLength = 0x07;
-                adapt_field_header.mRandomAccessIndicator = pFrame->mRandomAccess;
+                adapt_field_header.mRandomAccessIndicator = rFrame.mRandomAccess;
                 adapt_field_header.mPcrFlag = 0x01;
 
-                lTsHeader.encode(&lPacket);
-                adapt_field_header.encode(&lPacket);
-                writePcr(&lPacket, pFrame->mDts); //Fixme DTS??
+                lTsHeader.encode(lPacket);
+                adapt_field_header.encode(lPacket);
+                writePcr(lPacket, rFrame.mDts); //Fixme DTS??
             } else {
-                lTsHeader.encode(&lPacket);
+                lTsHeader.encode(lPacket);
             }
 
             PESHeader lPesHeader;
             lPesHeader.mPacketStartCode = 0x000001;
-            lPesHeader.mStreamId = pFrame->mStreamId;
+            lPesHeader.mStreamId = rFrame.mStreamId;
             lPesHeader.mMarkerBits = 0x02;
             lPesHeader.mOriginalOrCopy = 0x01;
 
-            if (pFrame->mPts != pFrame->mDts) {
+            if (rFrame.mPts != rFrame.mDts) {
                 lPesHeader.mPtsDtsFlags = 0x03;
                 lPesHeader.mHeaderDataLength = 0x0A;
             } else {
@@ -155,19 +154,19 @@ void MpegTsMuxer::createPes(EsFrame *pFrame, SimpleBuffer *pSb) {
                 lPesHeader.mHeaderDataLength = 0x05;
             }
 
-            uint32_t lPesSize = (lPesHeader.mHeaderDataLength + pFrame->mData->size() + 3);
+            uint32_t lPesSize = (lPesHeader.mHeaderDataLength + rFrame.mData->size() + 3);
             lPesHeader.mPesPacketLength = lPesSize > 0xffff ? 0 : lPesSize;
-            lPesHeader.encode(&lPacket);
+            lPesHeader.encode(lPacket);
 
             if (lPesHeader.mPtsDtsFlags == 0x03) {
-                writePts(&lPacket, 3, pFrame->mPts);
-                writePts(&lPacket, 1, pFrame->mDts);
+                writePts(lPacket, 3, rFrame.mPts);
+                writePts(lPacket, 1, rFrame.mDts);
             } else {
-                writePts(&lPacket, 2, pFrame->mPts);
+                writePts(lPacket, 2, rFrame.mPts);
             }
             lFirst = false;
         } else {
-            lTsHeader.encode(&lPacket);
+            lTsHeader.encode(lPacket);
         }
 
         uint32_t lPos = lPacket.size();
@@ -175,11 +174,11 @@ void MpegTsMuxer::createPes(EsFrame *pFrame, SimpleBuffer *pSb) {
         lPacket.write_string(std::string(lBodySize, 0));
         lPacket.skip(lPos);
 
-        uint32_t lInSize = pFrame->mData->size() - pFrame->mData->pos();
+        uint32_t lInSize = rFrame.mData->size() - rFrame.mData->pos();
         if (lBodySize <=
             lInSize) {    // MpegTsAdaptationFieldType::payload_only or MpegTsAdaptationFieldType::payload_adaption_both for AVC
             //lPacket.write_string(pFrame->mData->read_string(lBodySize));
-            std::string lBodyString = pFrame->mData->read_string(lBodySize);
+            std::string lBodyString = rFrame.mData->read_string(lBodySize);
             lPacket.set_data(lPos, lBodyString.c_str(), lBodyString.length());
         } else {
             uint16_t lStuffSize = lBodySize - lInSize;
@@ -202,16 +201,16 @@ void MpegTsMuxer::createPes(EsFrame *pFrame, SimpleBuffer *pSb) {
                 }
             }
             //lPacket.write_string(pFrame->mData->read_string(lInSize));
-            std::string lbodyString = pFrame->mData->read_string(lInSize);
+            std::string lbodyString = rFrame.mData->read_string(lInSize);
             lPacket.set_data(lPacket.pos(), lbodyString.c_str(), lbodyString.length());
         }
 
-        pSb->append(lPacket.data(), lPacket.size());
+        rSb.append(lPacket.data(), lPacket.size());
     }
 }
 
 //Fixme PCR implementation needs to be changed
-void MpegTsMuxer::createPcr(SimpleBuffer *pSb) {
+void MpegTsMuxer::createPcr(SimpleBuffer &rSb) {
     uint64_t lPcr = 0;
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
@@ -234,12 +233,12 @@ void MpegTsMuxer::createPcr(SimpleBuffer *pSb) {
     lAdaptField.mTransportPrivateDataFlag = 0;
     lAdaptField.mAdaptationFieldExtensionFlag = 0;
 
-    lTsHeader.encode(pSb);
-    lAdaptField.encode(pSb);
-    writePcr(pSb, lPcr);
+    lTsHeader.encode(rSb);
+    lAdaptField.encode(rSb);
+    writePcr(rSb, lPcr);
 }
 
-void MpegTsMuxer::createNull(SimpleBuffer *pSb) {
+void MpegTsMuxer::createNull(SimpleBuffer &rSb) {
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
     lTsHeader.mTransportErrorIndicator = 0;
@@ -249,17 +248,17 @@ void MpegTsMuxer::createNull(SimpleBuffer *pSb) {
     lTsHeader.mTransportScramblingControl = 0;
     lTsHeader.mAdaptationFieldControl = MpegTsAdaptationFieldType::mPayloadOnly;
     lTsHeader.mContinuityCounter = 0;
-    lTsHeader.encode(pSb);
+    lTsHeader.encode(rSb);
 }
 
-void MpegTsMuxer::encode(EsFrame *pFrame, SimpleBuffer *pSb) {
+void MpegTsMuxer::encode(EsFrame &rFrame, SimpleBuffer &rSb) {
     if (shouldCreatePat()) {
         uint8_t lPatPmtCc = getCc(0);
-        createPat(pSb, mPmtPid, lPatPmtCc);
-        createPmt(pSb, mStreamPidMap, mPmtPid, lPatPmtCc);
+        createPat(rSb, mPmtPid, lPatPmtCc);
+        createPmt(rSb, mStreamPidMap, mPmtPid, lPatPmtCc);
     }
 
-    createPes(pFrame, pSb);
+    createPes(rFrame, rSb);
 }
 
 uint8_t MpegTsMuxer::getCc(uint32_t lWithPid) {

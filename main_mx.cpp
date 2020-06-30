@@ -76,7 +76,7 @@ void muxOutput(EsFrame &rFrame){
     //Create your TS-Buffer
     SimpleBuffer lTsOutBuffer;
     //Multiplex your data
-    gpMuxer->encode(&rFrame, &lTsOutBuffer);
+    gpMuxer->encode(rFrame, lTsOutBuffer);
 
     //Double to fail at non integer data and be able to visualize in the print-out
     double packets = (double)lTsOutBuffer.size() / 188.0;
