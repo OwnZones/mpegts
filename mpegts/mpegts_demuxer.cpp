@@ -9,7 +9,7 @@ MpegTsDemuxer::MpegTsDemuxer()
 MpegTsDemuxer::~MpegTsDemuxer() {
 }
 
-int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
+int MpegTsDemuxer::decode(SimpleBuffer *pIn, EsFrame *&prOut) {
     while (!pIn->empty()) {
         int lPos = pIn->pos();
         TsHeader lTsHeader;
@@ -41,7 +41,7 @@ int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
         }
 
         // found pmt
-        if (mTsFrames.empty() && mPmtId != 0 && lTsHeader.mPid == mPmtId) {
+        if (mEsFrames.empty() && mPmtId != 0 && lTsHeader.mPid == mPmtId) {
             if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
                 AdaptationFieldHeader lAdaptionField;
@@ -55,8 +55,8 @@ int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
                 mPmtHeader.decode(pIn);
                 mPcrId = mPmtHeader.mPcrPid;
                 for (size_t lI = 0; lI < mPmtHeader.mInfos.size(); lI++) {
-                    mTsFrames[mPmtHeader.mInfos[lI]->mElementaryPid] = std::shared_ptr<TsFrame>(
-                            new TsFrame(mPmtHeader.mInfos[lI]->mStreamType));
+                    mEsFrames[mPmtHeader.mInfos[lI]->mElementaryPid] = std::shared_ptr<EsFrame>(
+                            new EsFrame(mPmtHeader.mInfos[lI]->mStreamType));
                     mStreamPidMap[mPmtHeader.mInfos[lI]->mStreamType] = mPmtHeader.mInfos[lI]->mElementaryPid;
                 }
                 mPmtIsValid = true;
@@ -66,7 +66,7 @@ int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
             }
         }
 
-        if (mTsFrames.find(lTsHeader.mPid) != mTsFrames.end()) {
+        if (mEsFrames.find(lTsHeader.mPid) != mEsFrames.end()) {
             uint8_t lPcrFlag = 0;
             uint64_t lPcr = 0;
             if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
@@ -87,35 +87,35 @@ int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
                 PESHeader lPesHeader;
                 if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
-                    if (mTsFrames[lTsHeader.mPid]->mCompleted) {
-                        mTsFrames[lTsHeader.mPid]->reset();
+                    if (mEsFrames[lTsHeader.mPid]->mCompleted) {
+                        mEsFrames[lTsHeader.mPid]->reset();
                     }
 
-                    if (!mTsFrames[lTsHeader.mPid]->empty()) {
-                        mTsFrames[lTsHeader.mPid]->mCompleted = true;
-                        mTsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
-                        prOut = mTsFrames[lTsHeader.mPid].get();
+                    if (!mEsFrames[lTsHeader.mPid]->empty()) {
+                        mEsFrames[lTsHeader.mPid]->mCompleted = true;
+                        mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
+                        prOut = mEsFrames[lTsHeader.mPid].get();
                         // got the frame, reset pos
                         pIn->skip(lPos - pIn->pos());
-                        return mTsFrames[lTsHeader.mPid]->mStreamType;
+                        return mEsFrames[lTsHeader.mPid]->mStreamType;
                     }
 
                     lPesHeader.decode(pIn);
-                    mTsFrames[lTsHeader.mPid]->mStreamId = lPesHeader.mStreamId;
-                    mTsFrames[lTsHeader.mPid]->mExpectedPesPacketLength = lPesHeader.mPesPacketLength;
+                    mEsFrames[lTsHeader.mPid]->mStreamId = lPesHeader.mStreamId;
+                    mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength = lPesHeader.mPesPacketLength;
                     if (lPesHeader.mPtsDtsFlags == 0x02) {
-                        mTsFrames[lTsHeader.mPid]->mPts = mTsFrames[lTsHeader.mPid]->mDts = readPts(pIn);
+                        mEsFrames[lTsHeader.mPid]->mPts = mEsFrames[lTsHeader.mPid]->mDts = readPts(pIn);
                     } else if (lPesHeader.mPtsDtsFlags == 0x03) {
-                        mTsFrames[lTsHeader.mPid]->mPts = readPts(pIn);
-                        mTsFrames[lTsHeader.mPid]->mDts = readPts(pIn);
+                        mEsFrames[lTsHeader.mPid]->mPts = readPts(pIn);
+                        mEsFrames[lTsHeader.mPid]->mDts = readPts(pIn);
                     }
                     if (lPesHeader.mPesPacketLength != 0) {
                         if ((lPesHeader.mPesPacketLength - 3 - lPesHeader.mHeaderDataLength) >= 188 ||
                             (lPesHeader.mPesPacketLength - 3 - lPesHeader.mHeaderDataLength) < 0) {
-                            mTsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(),
+                            mEsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(),
                                                                      188 - (pIn->pos() - lPos));
                         } else {
-                            mTsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(),
+                            mEsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(),
                                                                      lPesHeader.mPesPacketLength - 3 -
                                                                      lPesHeader.mHeaderDataLength);
                         }
@@ -125,14 +125,14 @@ int MpegTsDemuxer::decode(SimpleBuffer *pIn, TsFrame *&prOut) {
                     }
                 }
 
-                if (mTsFrames[lTsHeader.mPid]->mExpectedPesPacketLength != 0 &&
-                    mTsFrames[lTsHeader.mPid]->mData->size() + 188 - (pIn->pos() - lPos) >
-                    mTsFrames[lTsHeader.mPid]->mExpectedPesPacketLength) {
-                    mTsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(),
-                                                             mTsFrames[lTsHeader.mPid]->mExpectedPesPacketLength -
-                                                             mTsFrames[lTsHeader.mPid]->mData->size());
+                if (mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength != 0 &&
+                    mEsFrames[lTsHeader.mPid]->mData->size() + 188 - (pIn->pos() - lPos) >
+                    mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength) {
+                    mEsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(),
+                                                             mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength -
+                                                             mEsFrames[lTsHeader.mPid]->mData->size());
                 } else {
-                    mTsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(), 188 - (pIn->pos() - lPos));
+                    mEsFrames[lTsHeader.mPid]->mData->append(pIn->data() + pIn->pos(), 188 - (pIn->pos() - lPos));
                 }
             }
         } else if (mPcrId != 0 && mPcrId == lTsHeader.mPid) {

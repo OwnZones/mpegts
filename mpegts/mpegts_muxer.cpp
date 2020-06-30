@@ -5,7 +5,6 @@
 
 static const uint16_t MPEGTS_NULL_PACKET_PID = 0x1FFF;
 static const uint16_t MPEGTS_PAT_PID         = 0x0000;
-static const uint16_t MPEGTS_PCR_PID         = 0x0110;
 
 MpegTsMuxer::MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid) {
 
@@ -116,7 +115,7 @@ void MpegTsMuxer::createPmt(SimpleBuffer *pSb, std::map<uint8_t, int> lStreamPid
     pSb->append(lPmtSb.data(), lPmtSb.size());
 }
 
-void MpegTsMuxer::createPes(TsFrame *pFrame, SimpleBuffer *pSb) {
+void MpegTsMuxer::createPes(EsFrame *pFrame, SimpleBuffer *pSb) {
     bool lFirst = true;
     while (!pFrame->mData->empty()) {
         SimpleBuffer lPacket;
@@ -219,7 +218,7 @@ void MpegTsMuxer::createPcr(SimpleBuffer *pSb) {
     lTsHeader.mTransportErrorIndicator = 0;
     lTsHeader.mPayloadUnitStartIndicator = 0;
     lTsHeader.mTransportPriority = 0;
-    lTsHeader.mPid = MPEGTS_PCR_PID;
+    lTsHeader.mPid = mPcrPid;
     lTsHeader.mTransportScramblingControl = 0;
     lTsHeader.mAdaptationFieldControl = MpegTsAdaptationFieldType::mAdaptionOnly;
     lTsHeader.mContinuityCounter = 0;
@@ -253,7 +252,7 @@ void MpegTsMuxer::createNull(SimpleBuffer *pSb) {
     lTsHeader.encode(pSb);
 }
 
-void MpegTsMuxer::encode(TsFrame *pFrame, SimpleBuffer *pSb) {
+void MpegTsMuxer::encode(EsFrame *pFrame, SimpleBuffer *pSb) {
     if (shouldCreatePat()) {
         uint8_t lPatPmtCc = getCc(0);
         createPat(pSb, mPmtPid, lPatPmtCc);

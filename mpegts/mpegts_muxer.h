@@ -11,10 +11,6 @@
 #include <map>
 #include <cstdint>
 
-class SimpleBuffer;
-
-class TsFrame;
-
 class MpegTsMuxer {
 public:
     MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid);
@@ -25,13 +21,13 @@ public:
 
     void createPmt(SimpleBuffer *pSb, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint8_t lCc);
 
-    void createPes(TsFrame *pFrame, SimpleBuffer *pSb);
+    void createPes(EsFrame *pFrame, SimpleBuffer *pSb);
 
     void createPcr(SimpleBuffer *pSb);
 
     void createNull(SimpleBuffer *pSb);
 
-    void encode(TsFrame *pFrame, SimpleBuffer *pSb);
+    void encode(EsFrame *pFrame, SimpleBuffer *pSb);
 
 private:
     uint8_t getCc(uint32_t lWithPid);

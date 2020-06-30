@@ -13,10 +13,6 @@
 #include <memory>
 #include <map>
 
-class SimpleBuffer;
-
-class TsFrame;
-
 class MpegTsDemuxer {
 public:
     MpegTsDemuxer();
@@ -24,7 +20,7 @@ public:
     virtual ~MpegTsDemuxer();
 
 public:
-    int decode(SimpleBuffer *pIn, TsFrame *&prOut);
+    int decode(SimpleBuffer *pIn, EsFrame *&prOut);
 
     // stream, pid
     std::map<uint8_t, int> mStreamPidMap;
@@ -39,8 +35,8 @@ public:
     bool mPmtIsValid = false;
 
 private:
-    // pid, frame
-    std::map<int, std::shared_ptr<TsFrame>> mTsFrames;
+    // pid, Elementary data frame
+    std::map<int, std::shared_ptr<EsFrame>> mEsFrames;
     int mPcrId;
 };
 

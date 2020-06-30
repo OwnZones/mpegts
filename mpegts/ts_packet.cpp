@@ -3,21 +3,21 @@
 
 #include <iostream>
 
-TsFrame::TsFrame()
+EsFrame::EsFrame()
         : mCompleted(false), mPid(0), mExpectedPesPacketLength(0) {
     mData.reset(new SimpleBuffer);
 }
 
-TsFrame::TsFrame(uint8_t lSt)
+EsFrame::EsFrame(uint8_t lSt)
         : mStreamType(lSt), mCompleted(false), mPid(0), mExpectedPesPacketLength(0) {
     mData.reset(new SimpleBuffer);
 }
 
-bool TsFrame::empty() {
+bool EsFrame::empty() {
     return mData->size() == 0;
 }
 
-void TsFrame::reset() {
+void EsFrame::reset() {
     mPid = 0;
     mCompleted = false;
     mExpectedPesPacketLength = 0;

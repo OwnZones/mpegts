@@ -100,10 +100,10 @@ MpegTsDemuxer demuxer;
 in.append(packet, 188);
 
 //Demux the data
-TsFrame *frame = nullptr;
+EsFrame *frame = nullptr;
 demuxer.decode(&in, frame);
 
-//If the TsFrame != nullptr there is a demuxed frame availabile
+//If the EsFrame != nullptr there is a demuxed frame availabile
 //Example usage of the demuxer can be seen here ->
 //https://github.com/Unit-X/ts2efp/blob/master/main.cpp
 
@@ -128,32 +128,35 @@ Muxer ->
 //PMT PID
 #define PMT_PID 100
 
-//Create the multiplexer
-MpegTsMuxer muxer;
-
 //Create the map defining what datatype to map to what PID
 std::map<uint8_t, int> streamPidMap;
 streamPidMap[TYPE_AUDIO] = AUDIO_PID;
 streamPidMap[TYPE_VIDEO] = VIDEO_PID;
 
+//Create the multiplexer
+//param1 = PID map
+//param2 = PMT PID 
+//param3 = PCR PID
+MpegTsMuxer muxer(streamPidMap, PMT_PID, VIDEO_PID);
+
 //Build a frame of data (ES)
-TsFrame tsFrame;
-tsFrame.mData = std::make_shared<SimpleBuffer>();
+EsFrame esFrame;
+esFrame.mData = std::make_shared<SimpleBuffer>();
 //Append your ES-Data
-tsFrame.mData->append((const char *) rPacket->pFrameData, rPacket->mFrameSize);
-tsFrame.mPts = rPacket->mPts;
-tsFrame.mDts = rPacket->mPts;
-tsFrame.mPcr = 0;
-tsFrame.mStreamType = TYPE_AUDIO;
-tsFrame.mStreamId = 192;
-tsFrame.mPid = AUDIO_PID;
-tsFrame.mExpectedPesPacketLength = 0;
-tsFrame.mCompleted = true;
+esFrame.mData->append((const char *) rPacket->pFrameData, rPacket->mFrameSize);
+esFrame.mPts = rPacket->mPts;
+esFrame.mDts = rPacket->mPts;
+esFrame.mPcr = 0;
+esFrame.mStreamType = TYPE_AUDIO;
+esFrame.mStreamId = 192;
+esFrame.mPid = AUDIO_PID;
+esFrame.mExpectedPesPacketLength = 0;
+esFrame.mCompleted = true;
 
 //Create your TS-Buffer
 SimpleBuffer tsOutBuffer;
 //Multiplex your data
-muxer.encode(&tsFrame, streamPidMap, PMT_PID, &tsOutBuffer);
+muxer.encode(&esFrame, &tsOutBuffer);
 
 //The output TS packets ends up here
 tsOutBuffer.size() 

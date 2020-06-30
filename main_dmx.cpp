@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     while (!ifile.eof()) {
         ifile.read(packet, 188);
         in.append(packet, 188);
-        TsFrame *frame = nullptr;
+        EsFrame *frame = nullptr;
         demuxer.decode(&in, frame);
 
         if (frame) {

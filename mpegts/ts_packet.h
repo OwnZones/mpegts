@@ -19,13 +19,13 @@ public:
     static const uint8_t AVC = 0x1b;  //For FLV muxer leave for now
 };
 
-class TsFrame {
+class EsFrame {
 public:
-    TsFrame();
+    EsFrame();
 
-    TsFrame(uint8_t lSt);
+    EsFrame(uint8_t lSt);
 
-    virtual ~TsFrame() {};
+    virtual ~EsFrame() {};
 
     bool empty();
 

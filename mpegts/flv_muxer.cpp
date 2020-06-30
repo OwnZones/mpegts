@@ -85,7 +85,7 @@ int FLVMuxer::writeHeader(SimpleBuffer *pSb) {
     return 0;
 }
 
-int FLVMuxer::writeBody(TsFrame *pFrame, SimpleBuffer *pSb) {
+int FLVMuxer::writeBody(EsFrame *pFrame, SimpleBuffer *pSb) {
     if (pFrame->mStreamType == MpegTsStream::AAC) {
         writeAacTag(pFrame, pSb);
     } else if (pFrame->mStreamType == MpegTsStream::AVC) {
@@ -97,7 +97,7 @@ int FLVMuxer::writeBody(TsFrame *pFrame, SimpleBuffer *pSb) {
     return 0;
 }
 
-int FLVMuxer::writeAacTag(TsFrame *pFrame, SimpleBuffer *pSb) {
+int FLVMuxer::writeAacTag(EsFrame *pFrame, SimpleBuffer *pSb) {
     uint32_t lBodySize = 2 + pFrame->mData->size();
     uint32_t lPts = pFrame->mPts / 90;
     pSb->write_1byte(FLVTagType::mAudio);
@@ -113,7 +113,7 @@ int FLVMuxer::writeAacTag(TsFrame *pFrame, SimpleBuffer *pSb) {
     return 0;
 }
 
-int FLVMuxer::writeAvcTag(TsFrame *pFrame, SimpleBuffer *pSb) {
+int FLVMuxer::writeAvcTag(EsFrame *pFrame, SimpleBuffer *pSb) {
     int lIndex = 0;
     uint32_t lPts = pFrame->mPts / 90;
     uint32_t lDts = pFrame->mDts / 90;

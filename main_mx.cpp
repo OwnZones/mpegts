@@ -56,25 +56,16 @@ std::mutex gEncMtx;
 uint8_t* findNal(uint8_t *start, uint8_t *end)
 {
     uint8_t *p = start;
-
-    /* Simply lookup "0x000001" pattern */
-    while (p <= end-3 && (p[0] || p[1] || p[2]!=1))
-        ++p;
-
-    if (p > end-3)
-        /* No more NAL unit in this bitstream */
-        return nullptr;
-
+    while (p <= end-3 && (p[0] || p[1] || p[2]!=1)) ++p;
+    if (p > end-3) return nullptr;
     /* Include 8 bits leading zero */
     //if (p>start && *(p-1)==0)
     //    return (p-1);
-
     return p;
 }
 
-void muxOutput(TsFrame &rFrame){
+void muxOutput(EsFrame &rFrame){
     std::lock_guard<std::mutex> lock(gEncMtx);
-
 #ifdef SAVE_TO_FILE
     if (savedOutputFrames++ == SAVED_NUM_FRAMES) {
         savingFrames = false;
@@ -82,7 +73,6 @@ void muxOutput(TsFrame &rFrame){
         std::cout << "Stopped saving to file." << std::endl;
     }
 #endif
-
     //Create your TS-Buffer
     SimpleBuffer lTsOutBuffer;
     //Multiplex your data
@@ -104,16 +94,14 @@ void muxOutput(TsFrame &rFrame){
 }
 
 void fakeAudioEncoder() {
-
     double lAdtsTimeDistance = (1024.0/48000.0) * 1000000.0;
-
     double lNextTriger = (double)gTimeReference + lAdtsTimeDistance; //Meaning every 21.33333..ms from baseTime we send a adts frame
     uint64_t lFrameCounter = 0;
     char *adtsFrame;
     std::string lThisPTS;
     uint64_t lPts = gFirstPts-1920;
     uint64_t lCurrentOffset = 0;
-    TsFrame lTsFrame;
+    EsFrame lEsFrame;
 
     //The loop counter is there to silence my compilers infinitive loop warning.
     uint64_t lLoopCounter = UINT64_MAX;
@@ -143,19 +131,19 @@ void fakeAudioEncoder() {
                 lPts +=  90000/(48000/1024);
                 uint64_t lRecalcPts = lPts + lCurrentOffset;
 
-                lTsFrame.mData = std::make_shared<SimpleBuffer>();
-                lTsFrame.mData->append((const char *)adtsFrame, lFileSize);
-                lTsFrame.mPts = lRecalcPts;
-                lTsFrame.mDts = lRecalcPts;
-                lTsFrame.mPcr = 0;
-                lTsFrame.mStreamType = TYPE_AUDIO;
-                lTsFrame.mStreamId = 192;
-                lTsFrame.mPid = AUDIO_PID;
-                lTsFrame.mExpectedPesPacketLength = 0;
-                lTsFrame.mRandomAccess = 0x01;
-                lTsFrame.mCompleted = true;
+                lEsFrame.mData = std::make_shared<SimpleBuffer>();
+                lEsFrame.mData->append((const char *)adtsFrame, lFileSize);
+                lEsFrame.mPts = lRecalcPts;
+                lEsFrame.mDts = lRecalcPts;
+                lEsFrame.mPcr = 0;
+                lEsFrame.mStreamType = TYPE_AUDIO;
+                lEsFrame.mStreamId = 192;
+                lEsFrame.mPid = AUDIO_PID;
+                lEsFrame.mExpectedPesPacketLength = 0;
+                lEsFrame.mRandomAccess = 0x01;
+                lEsFrame.mCompleted = true;
 
-                muxOutput(lTsFrame);
+                muxOutput(lEsFrame);
 
                 delete[] adtsFrame;
             }
@@ -182,7 +170,7 @@ void fakeVideoEncoder() {
     uint64_t lPts = 0;
     uint64_t lDts = 0;
     uint64_t lCurrentOffset = 0;
-    TsFrame lTsFrame;
+    EsFrame lEsFrame;
 
     uint64_t lLoopCounter = UINT64_MAX;
 
@@ -238,19 +226,19 @@ void fakeVideoEncoder() {
                 uint64_t lRecalcPts = lPts + lCurrentOffset;
                 uint64_t lRecalcDts = lDts + lCurrentOffset;
 
-                lTsFrame.mData = std::make_shared<SimpleBuffer>();
-                lTsFrame.mData->append((const char *)videoNal, lFileSize);
-                lTsFrame.mPts = lRecalcPts;
-                lTsFrame.mDts = lRecalcDts;
-                lTsFrame.mPcr = 0;
-                lTsFrame.mStreamType = TYPE_VIDEO;
-                lTsFrame.mStreamId = 224;
-                lTsFrame.mPid = VIDEO_PID;
-                lTsFrame.mExpectedPesPacketLength = 0;
-                lTsFrame.mRandomAccess = lIdrFound;
-                lTsFrame.mCompleted = true;
+                lEsFrame.mData = std::make_shared<SimpleBuffer>();
+                lEsFrame.mData->append((const char *)videoNal, lFileSize);
+                lEsFrame.mPts = lRecalcPts;
+                lEsFrame.mDts = lRecalcDts;
+                lEsFrame.mPcr = 0;
+                lEsFrame.mStreamType = TYPE_VIDEO;
+                lEsFrame.mStreamId = 224;
+                lEsFrame.mPid = VIDEO_PID;
+                lEsFrame.mExpectedPesPacketLength = 0;
+                lEsFrame.mRandomAccess = lIdrFound;
+                lEsFrame.mCompleted = true;
 
-                muxOutput(lTsFrame);
+                muxOutput(lEsFrame);
 
                 delete[] videoNal;
             }

@@ -11,8 +11,7 @@
 // l local scope
 
 #include "simple_buffer.h"
-
-class TsFrame;
+#include "ts_packet.h"
 
 class FLVMuxer {
 public:
@@ -23,14 +22,14 @@ public:
 public:
     int writeHeader(SimpleBuffer *pSb);
 
-    int writeBody(TsFrame *pFrame, SimpleBuffer *pSb);
+    int writeBody(EsFrame *pFrame, SimpleBuffer *pSb);
 
     int writeMetadata(SimpleBuffer *pSb, uint32_t lFileSize);
 
 private:
-    int writeAacTag(TsFrame *pFrame, SimpleBuffer *pSb);
+    int writeAacTag(EsFrame *pFrame, SimpleBuffer *pSb);
 
-    int writeAvcTag(TsFrame *pFrame, SimpleBuffer *pSb);
+    int writeAvcTag(EsFrame *pFrame, SimpleBuffer *pSb);
 
     void calcDuration(uint32_t lPts);
 
