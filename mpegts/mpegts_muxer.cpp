@@ -210,13 +210,43 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
             } else {
                 // adaptationFieldControl |= 0x20 == MpegTsAdaptationFieldType::payload_adaption_both
   //              std::cout << "here" << std::endl;
-                lPacket.data()[3] |= 0x20;
-                lPacket.setData(188 - 4 - lStuffSize, lPacket.data() + 4, lPacket.pos() - 4);
-                lPacket.skip(lStuffSize);
-                lPacket.data()[4] = lStuffSize - 1;
-                if (lStuffSize >= 2) {
-                    lPacket.data()[5] = 0;
-                    memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
+
+                if (lFirst) {
+
+                    //we are here since there is no adaption field.. and first is set . That means we got a PES header.
+                    lPacket.data()[3] |= 0x20;
+                    uint8_t* lpBase = lPacket.data() + 4;
+                    size_t pesHeaderSize = lPos - 4;
+                    uint8_t *pesHeader = new uint8_t[pesHeaderSize];
+                    memcpy(pesHeader,lpBase,pesHeaderSize);
+                    memcpy(lpBase+lStuffSize,pesHeader,pesHeaderSize);
+                    delete[] pesHeader;
+
+                    lPacket.data()[4] = lStuffSize - 1;
+                    if (lStuffSize >= 2) {
+                        lPacket.data()[5] = 0;
+                        memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
+                    }
+
+                    lPacket.skip(lStuffSize);
+                    lPacket.data()[4] = lStuffSize - 1;
+                    if (lStuffSize >= 2) {
+                        lPacket.data()[5] = 0;
+                        memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
+                    }
+
+                } else {
+                    lPacket.data()[3] |= 0x20;
+                    int lDestPosition = 188 - 4 - lStuffSize;
+                    uint8_t *lSrcPosition = lPacket.data() + 4;
+                    int lLength = lPacket.pos() - 4;
+                    lPacket.setData(lDestPosition, lSrcPosition, lLength);
+                    lPacket.skip(lStuffSize);
+                    lPacket.data()[4] = lStuffSize - 1;
+                    if (lStuffSize >= 2) {
+                        lPacket.data()[5] = 0;
+                        memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
+                    }
                 }
             }
             lPacket.setData(lPacket.pos(), rFrame.mData->data()+rFrame.mData->pos(), lInSize);

@@ -34,7 +34,7 @@
 #define PCR_PID 300
 
 //Test Vector size
-#define TEST_VECTOR_SIZE 10
+#define TEST_VECTOR_SIZE 1000
 
 void UnitTest3::dmxOutput(EsFrame *pEs){
 
@@ -46,7 +46,7 @@ void UnitTest3::dmxOutput(EsFrame *pEs){
 
     //verify expected size
     if (pEs->mData->size() != mFrameCounter ) {
-        std::cout << "Frame size missmatch got:" << unsigned(pEs->mData->size()) << " Expected: " << unsigned(mFrameCounter) << std::endl;
+        std::cout << "Frame size missmatch got: " << unsigned(pEs->mData->size()) << " Expected: " << unsigned(mFrameCounter) << std::endl;
         mUnitTestStatus = false;
     }
 
@@ -66,7 +66,7 @@ void UnitTest3::dmxOutput(EsFrame *pEs){
         }
     }
 
-    mFrameCounter++;
+    mFrameInTransit = false;
 
 }
 
@@ -119,11 +119,16 @@ bool UnitTest3::runTest() {
         lEsFrame.mRandomAccess = (x%10)?0:1;
         lEsFrame.mCompleted = true;
 
-        if (x == 2) {
-            std::cout << "catch me " << std::endl;
-        }
+        mFrameInTransit = true;
 
         lMuxer.encode(lEsFrame);
+
+        if (mFrameInTransit) {
+            std::cout << "Frame " << unsigned(x) << " not muxed/demuxed corectly" << std::endl;
+            mUnitTestStatus = false;
+        }
+
+        mFrameCounter++;
     }
 
     if (x != mFrameCounter) {

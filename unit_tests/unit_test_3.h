@@ -19,6 +19,7 @@ private:
     MpegTsDemuxer mDemuxer;
     int mFrameCounter = 1;
     bool mUnitTestStatus = true;
+    bool mFrameInTransit = false;
 };
 
 #endif //MPEGTS_UNIT_TEST_3_H
