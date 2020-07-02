@@ -6,6 +6,7 @@
 #include "unit_test_1.h"
 #include "unit_test_2.h"
 #include "unit_test_3.h"
+#include "unit_test_4.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Running all unit tests." << std::endl;
@@ -22,7 +23,6 @@ int main(int argc, char *argv[]) {
         returnCode = EXIT_FAILURE;
     }
 
-
     //mux/demux a vector increasing in size from 1 byte to a set size inside the unit test
     // Difference is that the demuxer is fed multiple ts packets to parse
     //please read the comment inside the unit test for more information
@@ -34,12 +34,19 @@ int main(int argc, char *argv[]) {
         returnCode = EXIT_FAILURE;
     }
 
-
     //Same as Unit Test 1 but is not embedding PCR
     std::cout << "Unit test3 started." << std::endl;
     UnitTest3 unitTest3;
     if (!unitTest3.runTest()) {
         std::cout << "Unit test 3 failed" << std::endl;
+        returnCode = EXIT_FAILURE;
+    }
+
+    //Same as Unit Test 2 but is not embedding PCR
+    std::cout << "Unit test4 started." << std::endl;
+    UnitTest4 unitTest4;
+    if (!unitTest3.runTest()) {
+        std::cout << "Unit test 4 failed" << std::endl;
         returnCode = EXIT_FAILURE;
     }
 
