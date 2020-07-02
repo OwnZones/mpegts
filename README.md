@@ -1,7 +1,12 @@
 # MPEG-TS
+
+**This fork is WIP.. meaning you can't trust API's or examples untill this line of text is gone**
+
 A simple C++ implementation of a MPEG-TS Muxer and Demuxer
 
 This is a fork of the project as noted above. This fork adds support for adding the multiplexer / demultiplexer as a library into your projects among other features as can be seen in the examples.
+
+The upstream master also contains a lot of serious bugs fixed in this fork. There might still be bugs in the code please let me know if you find any.
 
 
 **Build status ->**
@@ -65,7 +70,6 @@ set_property(TARGET mpegts PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR
 **Add header search paths ->**
 
 ```
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mpegts/amf0/amf0/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mpegts/mpegts/)
 ```
 
@@ -90,20 +94,26 @@ Demuxer ->
 
 #include "mpegts_demuxer.h"
 
-//Create a input buffer
-SimpleBuffer in;
-//Create a demuxer
-MpegTsDemuxer demuxer;
+//Callback where the demuxed data ends up
+void dmxOutput(EsFrame *pEs) {
+//The EsFrame contains all information about the Elementary data
+}
 
+
+//Create a input buffer
+SimpleBuffer lIn;
+//Create a demuxer
+MpegTsDemuxer lDemuxer;
+
+//Provide a callback for the ES data
+lDemuxer.esOutCallback = std::bind(&dmxOutput, std::placeholders::_1);
 
 //Append data to the input buffer 
-in.append(packet, 188);
+lIn.append(packet, 188);
 
 //Demux the data
-EsFrame *frame = nullptr;
-demuxer.decode(&in, frame);
+demuxer.decode(&lIn);
 
-//If the EsFrame != nullptr there is a demuxed frame availabile
 //Example usage of the demuxer can be seen here ->
 //https://github.com/Unit-X/ts2efp/blob/master/main.cpp
 
@@ -128,6 +138,11 @@ Muxer ->
 //PMT PID
 #define PMT_PID 100
 
+//A callback where all the TS-packets are sent from the multiplexer
+void muxOutput(SimpleBuffer &rTsOutBuffer){
+
+}
+
 //Create the map defining what datatype to map to what PID
 std::map<uint8_t, int> streamPidMap;
 streamPidMap[TYPE_AUDIO] = AUDIO_PID;
@@ -137,7 +152,10 @@ streamPidMap[TYPE_VIDEO] = VIDEO_PID;
 //param1 = PID map
 //param2 = PMT PID 
 //param3 = PCR PID
-MpegTsMuxer muxer(streamPidMap, PMT_PID, VIDEO_PID);
+MpegTsMuxer lMuxer(streamPidMap, PMT_PID, VIDEO_PID);
+
+//Provide the callback where TS packets are fed to
+lMuxer.tsOutCallback = std::bind(&muxOutput, std::placeholders::_1);
 
 //Build a frame of data (ES)
 EsFrame esFrame;
@@ -153,14 +171,8 @@ esFrame.mPid = AUDIO_PID;
 esFrame.mExpectedPesPacketLength = 0;
 esFrame.mCompleted = true;
 
-//Create your TS-Buffer
-SimpleBuffer tsOutBuffer;
 //Multiplex your data
-muxer.encode(&esFrame, &tsOutBuffer);
-
-//The output TS packets ends up here
-tsOutBuffer.size() 
-tsOutBuffer.data()
+lMuxer.encode(&esFrame);
 
 ```
 

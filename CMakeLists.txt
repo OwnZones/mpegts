@@ -29,5 +29,5 @@ add_executable(mpeg_ts_mx_tests ${CMAKE_CURRENT_SOURCE_DIR}/main_mx.cpp)
 target_link_libraries(mpeg_ts_mx_tests mpegts Threads::Threads)
 
 file(GLOB unit_tests_sources ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/*.cpp)
-add_executable(unit_tests ${unit_tests_sources} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.cpp)
-target_link_libraries(unit_tests mpegts Threads::Threads)
+add_executable(mpeg_ts_unit_tests ${unit_tests_sources} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.cpp)
+target_link_libraries(mpeg_ts_unit_tests mpegts Threads::Threads)
