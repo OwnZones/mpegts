@@ -99,6 +99,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                         if (esOutCallback) {
                             lEsFrame = mEsFrames[lTsHeader.mPid].get();
                             lEsFrame -> mBroken = true;
+                            lEsFrame -> mPid = lTsHeader.mPid;
                             esOutCallback(lEsFrame);
                         }
 
@@ -132,6 +133,8 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
 
                         int payloadLength = lPesHeader.mPesPacketLength - 3 -
                                             lPesHeader.mHeaderDataLength;
+
+                        mEsFrames[lTsHeader.mPid]->mExpectedPayloadLength = payloadLength;
 
                         if (payloadLength + rIn.pos() > 188 || payloadLength < 0) {
                             mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(),
@@ -167,8 +170,16 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                     mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(), 188 - (rIn.pos() - lPos));
                 }
 
-
-//Deliver here
+                //Enough data to deliver?
+                if (mEsFrames[lTsHeader.mPid]->mExpectedPayloadLength == mEsFrames[lTsHeader.mPid]->mData->size()) {
+                    mEsFrames[lTsHeader.mPid]->mCompleted = true;
+                    mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
+                    lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                    if (esOutCallback) {
+                        esOutCallback(lEsFrame);
+                    }
+                    mEsFrames[lTsHeader.mPid]->reset();
+                }
 
             }
         } else if (mPcrId != 0 && mPcrId == lTsHeader.mPid) {

@@ -18,6 +18,12 @@ int main(int argc, char *argv[]) {
         returnCode = EXIT_FAILURE;
     }
 
+    if (returnCode == EXIT_FAILURE) {
+        std::cout << "Unit tests failed." << std::endl;
+    } else {
+        std::cout << "Unit tests pass." << std::endl;
+    }
+
     return returnCode;
 }
 

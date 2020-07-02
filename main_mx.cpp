@@ -70,12 +70,12 @@ void muxOutput(SimpleBuffer &rTsOutBuffer){
     //Double to fail at non integer data and be able to visualize in the print-out
     double packets = (double)rTsOutBuffer.size() / 188.0;
     //std::cout << "Sending -> " << packets << " MPEG-TS packets" << std::endl;
-    char* lpData = rTsOutBuffer.data();
+    uint8_t* lpData = rTsOutBuffer.data();
     for (int lI = 0 ; lI < packets ; lI++) {
         mpegTsOut.send((const std::byte *)lpData+(lI*188), 188);
     #ifdef SAVE_TO_FILE
         if (savingFrames) {
-            oMpegTs.write(lpData + (lI * 188), 188);
+            oMpegTs.write((char*)lpData + (lI * 188), 188);
         } else {
             if (!closeOnce) {
                 oMpegTs.close();
@@ -91,7 +91,7 @@ void fakeAudioEncoder() {
     double lAdtsTimeDistance = (1024.0/48000.0) * 1000000.0;
     double lNextTriger = (double)gTimeReference + lAdtsTimeDistance; //Meaning every 21.33333..ms from baseTime we send a adts frame
     uint64_t lFrameCounter = 0;
-    char *adtsFrame;
+    uint8_t* adtsFrame;
     std::string lThisPTS;
     uint64_t lPts = gFirstPts-1920;
     uint64_t lCurrentOffset = 0;
@@ -117,16 +117,16 @@ void fakeAudioEncoder() {
             if (adtsFile.is_open())
             {
                 size_t lFileSize= adtsFile.tellg();
-                adtsFrame = new char [lFileSize];
+                adtsFrame = new uint8_t [lFileSize];
                 adtsFile.seekg (0, std::ios::beg);
-                adtsFile.read (adtsFrame, lFileSize);
+                adtsFile.read ((char*)&adtsFrame[0], lFileSize);
                 adtsFile.close();
 
                 lPts +=  90000/(48000/1024);
                 uint64_t lRecalcPts = lPts + lCurrentOffset;
 
                 lEsFrame.mData = std::make_shared<SimpleBuffer>();
-                lEsFrame.mData->append((const char *)adtsFrame, lFileSize);
+                lEsFrame.mData->append(adtsFrame, lFileSize);
                 lEsFrame.mPts = lRecalcPts;
                 lEsFrame.mDts = lRecalcPts;
                 lEsFrame.mPcr = 0;
@@ -158,7 +158,7 @@ void fakeAudioEncoder() {
 void fakeVideoEncoder() {
     int64_t lNextTriger = gTimeReference + (20*1000); //Meaning every 20ms from baseTime we send a picture
     uint64_t lFrameCounter = 0;
-    char *videoNal;
+    uint8_t* videoNal;
     std::string lThisPTS;
     std::string lThisDTS;
     uint64_t lPts = 0;
@@ -200,9 +200,9 @@ void fakeVideoEncoder() {
             if (nalFile.is_open())
             {
                 size_t lFileSize= nalFile.tellg();
-                videoNal = new char [lFileSize];
+                videoNal = new uint8_t [lFileSize];
                 nalFile.seekg (0, std::ios::beg);
-                nalFile.read (videoNal, lFileSize);
+                nalFile.read ((char*)&videoNal[0], lFileSize);
                 nalFile.close();
 
                 uint8_t lIdrFound = 0x00;
@@ -221,7 +221,7 @@ void fakeVideoEncoder() {
                 uint64_t lRecalcDts = lDts + lCurrentOffset;
 
                 lEsFrame.mData = std::make_shared<SimpleBuffer>();
-                lEsFrame.mData->append((const char *)videoNal, lFileSize);
+                lEsFrame.mData->append(videoNal, lFileSize);
                 lEsFrame.mPts = lRecalcPts;
                 lEsFrame.mDts = lRecalcDts;
                 lEsFrame.mPcr = 0;

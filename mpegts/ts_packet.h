@@ -40,6 +40,7 @@ public:
     uint8_t mStreamId;
     uint16_t mPid;
     uint16_t mExpectedPesPacketLength;
+    uint16_t mExpectedPayloadLength;
     bool mCompleted;
     bool mBroken;
 };

@@ -9,7 +9,7 @@ EsFrame::EsFrame()
 }
 
 EsFrame::EsFrame(uint8_t lSt)
-        : mStreamType(lSt), mCompleted(false), mBroken(false), mPid(0), mExpectedPesPacketLength(0) {
+        : mStreamType(lSt), mCompleted(false), mBroken(false), mPid(0), mExpectedPesPacketLength(0), mExpectedPayloadLength(0) {
     mData.reset(new SimpleBuffer);
 }
 
@@ -22,6 +22,7 @@ void EsFrame::reset() {
     mCompleted = false;
     mBroken = false;
     mExpectedPesPacketLength = 0;
+    mExpectedPayloadLength = 0;
     mData.reset(new SimpleBuffer);
 }
 

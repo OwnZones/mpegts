@@ -15,6 +15,8 @@
 
 //4. Every tenth frame is set to mRandomAccess. Verify the correctness after muxing demuxing
 
+//This unit test is sending each TS to the demuxer meaning 188 bytes at a time
+
 
 #include "unit_test_1.h"
 
@@ -113,11 +115,6 @@ bool UnitTest1::runTest() {
         lEsFrame.mExpectedPesPacketLength = 0;
         lEsFrame.mRandomAccess = (x%10)?0:1;
         lEsFrame.mCompleted = true;
-
-
-        if (x == 170) {
-            std::cout << " Debug me " << std::endl;
-        }
 
         lMuxer.encode(lEsFrame);
     }
