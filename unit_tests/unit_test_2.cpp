@@ -15,10 +15,10 @@
 
 //4. Every tenth frame is set to mRandomAccess. Verify the correctness after muxing demuxing
 
-//This unit test is sending each TS to the demuxer meaning 188 bytes at a time
+//This unit test is sending a block of TS to the dmuxer
 
 
-#include "unit_test_1.h"
+#include "unit_test_2.h"
 
 //AAC (ADTS) audio
 #define TYPE_AUDIO 0x0f
@@ -34,7 +34,7 @@
 //Test Vector size
 #define TEST_VECTOR_SIZE 4000
 
-void UnitTest1::dmxOutput(EsFrame *pEs){
+void UnitTest2::dmxOutput(EsFrame *pEs){
 
 
     if ((mFrameCounter%10)?0:1 != pEs->mRandomAccess) {
@@ -68,7 +68,7 @@ void UnitTest1::dmxOutput(EsFrame *pEs){
 
 }
 
-void UnitTest1::muxOutput(SimpleBuffer &rTsOutBuffer) {
+void UnitTest2::muxOutput(SimpleBuffer &rTsOutBuffer) {
     //Double to fail at non integer data and be able to visualize in the print-out
     double packets = (double) rTsOutBuffer.size() / 188.0;
     if (packets != (int) packets) {
@@ -76,25 +76,21 @@ void UnitTest1::muxOutput(SimpleBuffer &rTsOutBuffer) {
         mUnitTestStatus = false;
     }
 
-    uint8_t* lpData = rTsOutBuffer.data();
+    SimpleBuffer lIn;
+    lIn.append(rTsOutBuffer.data(), rTsOutBuffer.size());
+    mDemuxer.decode(lIn);
 
-
-    for (int lI = 0 ; lI < packets ; lI++) {
-        SimpleBuffer lIn;
-        lIn.append(lpData+(lI*188), 188);
-        mDemuxer.decode(lIn);
-    }
 }
 
-bool UnitTest1::runTest() {
+bool UnitTest2::runTest() {
 
-    mDemuxer.esOutCallback = std::bind(&UnitTest1::dmxOutput, this, std::placeholders::_1);
+    mDemuxer.esOutCallback = std::bind(&UnitTest2::dmxOutput, this, std::placeholders::_1);
 
     uint8_t testVector[TEST_VECTOR_SIZE];
     std::map<uint8_t, int> gStreamPidMap;
     gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
     MpegTsMuxer lMuxer(gStreamPidMap, PMT_PID, VIDEO_PID);
-    lMuxer.tsOutCallback = std::bind(&UnitTest1::muxOutput, this, std::placeholders::_1);
+    lMuxer.tsOutCallback = std::bind(&UnitTest2::muxOutput, this, std::placeholders::_1);
 
     //Make Vector
     for (int x = 0; x < TEST_VECTOR_SIZE; x++) {

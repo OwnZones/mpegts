@@ -4,17 +4,31 @@
 
 #include <iostream>
 #include "unit_test_1.h"
+#include "unit_test_2.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Running all unit tests." << std::endl;
 
     int returnCode = EXIT_SUCCESS;
 
-    //mux/demux a vector increasing in size from 1 byte to 1000 bytes
-    //Also run trough the combinations of PTS/DTS/PCR meaning PTS only and PTS+DTS + PCR
+    //mux/demux a vector increasing in size from 1 byte to a set size inside the unit test
+    //please read the comment inside the unit test for more information
+
+    std::cout << "Unit test1 started." << std::endl;
     UnitTest1 unitTest1;
     if (!unitTest1.runTest()) {
         std::cout << "Unit test 1 failed" << std::endl;
+        returnCode = EXIT_FAILURE;
+    }
+
+    //mux/demux a vector increasing in size from 1 byte to a set size inside the unit test
+    // Difference is that the demuxer is fed multiple ts packets to parse
+    //please read the comment inside the unit test for more information
+
+    std::cout << "Unit test2 started." << std::endl;
+    UnitTest2 unitTest2;
+    if (!unitTest2.runTest()) {
+        std::cout << "Unit test 2 failed" << std::endl;
         returnCode = EXIT_FAILURE;
     }
 
