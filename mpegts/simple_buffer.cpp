@@ -1,7 +1,5 @@
 #include "simple_buffer.h"
-
 #include <assert.h>
-//#include <algorithm>
 #include <iterator>
 
 SimpleBuffer::SimpleBuffer()
@@ -19,12 +17,12 @@ SimpleBuffer::~SimpleBuffer()
 {
 }
 
-void SimpleBuffer::write_1byte(int8_t val)
+void SimpleBuffer::write1Byte(int8_t val)
 {
     mData.push_back(val);
 }
 
-void SimpleBuffer::write_2bytes(int16_t val)
+void SimpleBuffer::write2Bytes(int16_t val)
 {
     char *p = (char *)&val;
 
@@ -33,7 +31,7 @@ void SimpleBuffer::write_2bytes(int16_t val)
     }
 }
 
-void SimpleBuffer::write_3bytes(int32_t val)
+void SimpleBuffer::write3Bytes(int32_t val)
 {
     char *p = (char *)&val;
 
@@ -42,7 +40,7 @@ void SimpleBuffer::write_3bytes(int32_t val)
     }
 }
 
-void SimpleBuffer::write_4bytes(int32_t val)
+void SimpleBuffer::write4Bytes(int32_t val)
 {
     char *p = (char *)&val;
 
@@ -51,7 +49,7 @@ void SimpleBuffer::write_4bytes(int32_t val)
     }
 }
 
-void SimpleBuffer::write_8bytes(int64_t val)
+void SimpleBuffer::write8Bytes(int64_t val)
 {
     char *p = (char *)&val;
 
@@ -60,20 +58,19 @@ void SimpleBuffer::write_8bytes(int64_t val)
     }
 }
 
-void SimpleBuffer::write_string(std::string val)
-{
-    std::copy(val.begin(), val.end(), std::back_inserter(mData));
-}
-
 void SimpleBuffer::append(const uint8_t* bytes, int size)
 {
-    if (!bytes || size <= 0)
+    if (!bytes || size <= 0) {
+#ifdef DEBUG
+        std::cout << " append error " << std::endl;
+#endif
         return;
+    }
 
     mData.insert(mData.end(), bytes, bytes + size);
 }
 
-int8_t SimpleBuffer::read_1byte()
+int8_t SimpleBuffer::read1Byte()
 {
     assert(require(1));
 
@@ -83,7 +80,7 @@ int8_t SimpleBuffer::read_1byte()
     return val;
 }
 
-int16_t SimpleBuffer::read_2bytes()
+int16_t SimpleBuffer::read2Bytes()
 {
     assert(require(2));
 
@@ -98,7 +95,7 @@ int16_t SimpleBuffer::read_2bytes()
     return val;
 }
 
-int32_t SimpleBuffer::read_3bytes()
+int32_t SimpleBuffer::read3Bytes()
 {
     assert(require(3));
 
@@ -113,7 +110,7 @@ int32_t SimpleBuffer::read_3bytes()
     return val;
 }
 
-int32_t SimpleBuffer::read_4bytes()
+int32_t SimpleBuffer::read4Bytes()
 {
     assert(require(4));
 
@@ -128,7 +125,7 @@ int32_t SimpleBuffer::read_4bytes()
     return val;
 }
 
-int64_t SimpleBuffer::read_8bytes()
+int64_t SimpleBuffer::read8Bytes()
 {
     assert(require(8));
 
@@ -143,11 +140,9 @@ int64_t SimpleBuffer::read_8bytes()
     return val;
 }
 
-std::string SimpleBuffer::read_string(int len)
+std::string SimpleBuffer::readString(int len)
 {
     assert(require(len));
-
-
 
     std::string val(*(char*)&mData[0] + mPos, len);
     mPos += len;
@@ -193,12 +188,19 @@ void SimpleBuffer::clear()
     mData.clear();
 }
 
-void SimpleBuffer::set_data(int pos, const uint8_t* data, int len)
+void SimpleBuffer::setData(int pos, const uint8_t* data, int len)
 {
-    if (!data)
+    if (!data) {
+#ifdef DEBUG
+        std::cout << " setData error data ptr == nullpts " << std::endl;
+#endif
         return;
+    }
 
     if (pos + len > size()) {
+#ifdef DEBUG
+        std::cout << " setData error data out of bounds " << std::endl;
+#endif
         return;
     }
 
@@ -207,7 +209,3 @@ void SimpleBuffer::set_data(int pos, const uint8_t* data, int len)
     }
 }
 
-std::string SimpleBuffer::to_string()
-{
-    return std::string(mData.begin(), mData.end());
-}

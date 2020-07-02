@@ -53,12 +53,12 @@ void MpegTsMuxer::createPat(SimpleBuffer &rSb, uint16_t lPmtPid, uint8_t lCc) {
     lTsHeader.encode(lPatSb);
     lAdaptField.encode(lPatSb);
     lPatHeader.encode(lPatSb);
-    lPatSb.write_2bytes(lProgramNumber);
-    lPatSb.write_2bytes(lProgramMapPid);
+    lPatSb.write2Bytes(lProgramNumber);
+    lPatSb.write2Bytes(lProgramMapPid);
 
     // crc32
     uint32_t lCrc32 = crc32((uint8_t *)lPatSb.data() + 5, lPatSb.size() - 5);
-    lPatSb.write_4bytes(lCrc32);
+    lPatSb.write4Bytes(lCrc32);
 
     std::vector<uint8_t> lStuff(188 - lPatSb.size(), 0xff);
     lPatSb.append((const uint8_t *)lStuff.data(),lStuff.size());
@@ -108,7 +108,7 @@ void MpegTsMuxer::createPmt(SimpleBuffer &rSb, std::map<uint8_t, int> lStreamPid
 
     // crc32
     uint32_t crc_32 = crc32((uint8_t *)lPmtSb.data() + 5, lPmtSb.size() - 5);
-    lPmtSb.write_4bytes(crc_32);
+    lPmtSb.write4Bytes(crc_32);
 
     std::vector<uint8_t> lStuff(188 - lPmtSb.size(), 0xff);
     lPmtSb.append((const uint8_t *)lStuff.data(),lStuff.size());
@@ -180,7 +180,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
         uint32_t lInSize = rFrame.mData->size() - rFrame.mData->pos();
         if (lBodySize <=
             lInSize) {
-            lPacket.set_data(lPos, rFrame.mData->data()+rFrame.mData->pos(), lBodySize);
+            lPacket.setData(lPos, rFrame.mData->data()+rFrame.mData->pos(), lBodySize);
             rFrame.mData->skip(lBodySize);
         } else {
             uint16_t lStuffSize = lBodySize - lInSize;
@@ -198,7 +198,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                         memcpy(lpBase+lStuffSize,pesHeader,pesHeaderSize);
                         delete[] pesHeader;
                     } else {
-                        lPacket.set_data(lpBase - lPacket.data() + lStuffSize, lpBase,
+                        lPacket.setData(lpBase - lPacket.data() + lStuffSize, lpBase,
                                          lPacket.data() + lPacket.pos() - lpBase);
                     }
 
@@ -210,7 +210,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
             } else {
                 // adaptationFieldControl |= 0x20 == MpegTsAdaptationFieldType::payload_adaption_both
                 lPacket.data()[3] |= 0x20;
-                lPacket.set_data(188 - 4 - lStuffSize, lPacket.data() + 4, lPacket.pos() - 4);
+                lPacket.setData(188 - 4 - lStuffSize, lPacket.data() + 4, lPacket.pos() - 4);
                 lPacket.skip(lStuffSize);
                 lPacket.data()[4] = lStuffSize - 1;
                 if (lStuffSize >= 2) {
@@ -218,7 +218,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                     memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
                 }
             }
-            lPacket.set_data(lPacket.pos(), rFrame.mData->data()+rFrame.mData->pos(), lInSize);
+            lPacket.setData(lPacket.pos(), rFrame.mData->data()+rFrame.mData->pos(), lInSize);
             rFrame.mData->skip(lInSize);
         }
 

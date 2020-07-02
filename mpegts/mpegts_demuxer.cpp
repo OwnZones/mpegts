@@ -10,7 +10,6 @@ MpegTsDemuxer::~MpegTsDemuxer() {
 }
 
 uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
-    EsFrame *lEsFrame;
     while (!rIn.empty()) {
         int lPos = rIn.pos();
         TsHeader lTsHeader;
@@ -28,12 +27,12 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
             if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadOnly ||
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
                 if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
-                    uint8_t lPointField = rIn.read_1byte();
+                    uint8_t lPointField = rIn.read1Byte();
                 }
 
                 mPatHeader.decode(rIn);
-                rIn.read_2bytes();
-                mPmtId = rIn.read_2bytes() & 0x1fff;
+                rIn.read2Bytes();
+                mPmtId = rIn.read2Bytes() & 0x1fff;
                 mPatIsValid = true;
 #ifdef DEBUG
                 mPatHeader.print();
@@ -51,7 +50,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
             }
 
             if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
-                uint8_t lPointField = rIn.read_1byte();
+                uint8_t lPointField = rIn.read1Byte();
 
                 mPmtHeader.decode(rIn);
                 mPcrId = mPmtHeader.mPcrPid;
@@ -97,7 +96,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                     } else if (mEsFrames[lTsHeader.mPid]->mData->size() && !mEsFrames[lTsHeader.mPid]->mCompleted) {
                         //Its a broken frame deliver that as broken
                         if (esOutCallback) {
-                            lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                            EsFrame *lEsFrame = mEsFrames[lTsHeader.mPid].get();
                             lEsFrame -> mBroken = true;
                             lEsFrame -> mPid = lTsHeader.mPid;
                             esOutCallback(lEsFrame);
@@ -105,20 +104,6 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
 
                         mEsFrames[lTsHeader.mPid]->reset();
                     }
-
-//                    if (!mEsFrames[lTsHeader.mPid]->empty()) {
-//                        mEsFrames[lTsHeader.mPid]->mCompleted = true;
-//                        mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
-//                        lEsFrame = mEsFrames[lTsHeader.mPid].get();
-//                        // got the frame, reset pos
-//                        rIn.skip(lPos - rIn.pos());
-//
-//                        if (esOutCallback) {
-//                            esOutCallback(lEsFrame);
-//                        }
-//
-//                        return mEsFrames[lTsHeader.mPid]->mStreamType;
-//                    }
 
                     lPesHeader.decode(rIn);
                     mEsFrames[lTsHeader.mPid]->mStreamId = lPesHeader.mStreamId;
@@ -148,7 +133,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                         if(mEsFrames[lTsHeader.mPid]->mData->size() == payloadLength) {
                             mEsFrames[lTsHeader.mPid]->mCompleted = true;
                             mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
-                            lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                            EsFrame *lEsFrame = mEsFrames[lTsHeader.mPid].get();
                             if (esOutCallback) {
                                 esOutCallback(lEsFrame);
                             }
@@ -174,7 +159,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                 if (mEsFrames[lTsHeader.mPid]->mExpectedPayloadLength == mEsFrames[lTsHeader.mPid]->mData->size()) {
                     mEsFrames[lTsHeader.mPid]->mCompleted = true;
                     mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
-                    lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                    EsFrame *lEsFrame = mEsFrames[lTsHeader.mPid].get();
                     if (esOutCallback) {
                         esOutCallback(lEsFrame);
                     }

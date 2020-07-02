@@ -13,12 +13,6 @@
 
 class SimpleBuffer;
 
-class MpegTsStream {
-public:
-    static const uint8_t AAC = 0x0f;  //For FLV muxer leave for now
-    static const uint8_t AVC = 0x1b;  //For FLV muxer leave for now
-};
-
 class EsFrame {
 public:
     EsFrame();
