@@ -148,9 +148,10 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                 if (mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength != 0 &&
                     mEsFrames[lTsHeader.mPid]->mData->size() + 188 - (rIn.pos() - lPos) >
                     mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength) {
-                    mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(),
-                                                             mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength -
-                                                             mEsFrames[lTsHeader.mPid]->mData->size());
+
+                    uint8_t *dataPosition = rIn.data() + rIn.pos();
+                    int size = mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength - mEsFrames[lTsHeader.mPid]->mData->size();
+                    mEsFrames[lTsHeader.mPid]->mData->append(dataPosition,size);
                 } else {
                     mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(), 188 - (rIn.pos() - lPos));
                 }

@@ -209,6 +209,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
 
             } else {
                 // adaptationFieldControl |= 0x20 == MpegTsAdaptationFieldType::payload_adaption_both
+  //              std::cout << "here" << std::endl;
                 lPacket.data()[3] |= 0x20;
                 lPacket.setData(188 - 4 - lStuffSize, lPacket.data() + 4, lPacket.pos() - 4);
                 lPacket.skip(lStuffSize);

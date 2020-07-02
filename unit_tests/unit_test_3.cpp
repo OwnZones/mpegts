@@ -18,7 +18,7 @@
 //This unit test is sending each TS to the demuxer meaning 188 bytes at a time
 
 
-#include "unit_test_1.h"
+#include "unit_test_3.h"
 
 //AAC (ADTS) audio
 #define TYPE_AUDIO 0x0f
@@ -30,11 +30,13 @@
 #define VIDEO_PID 256
 //PMT PID
 #define PMT_PID 100
+//PCR PID
+#define PCR_PID 300
 
 //Test Vector size
-#define TEST_VECTOR_SIZE 4000
+#define TEST_VECTOR_SIZE 10
 
-void UnitTest1::dmxOutput(EsFrame *pEs){
+void UnitTest3::dmxOutput(EsFrame *pEs){
 
     //Is the frame correctly marked as mRandomAccess
     if ((mFrameCounter%10)?0:1 != pEs->mRandomAccess) {
@@ -44,7 +46,7 @@ void UnitTest1::dmxOutput(EsFrame *pEs){
 
     //verify expected size
     if (pEs->mData->size() != mFrameCounter ) {
-        std::cout << "Frame size missmatch " << unsigned(pEs->mData->size()) << std::endl;
+        std::cout << "Frame size missmatch got:" << unsigned(pEs->mData->size()) << " Expected: " << unsigned(mFrameCounter) << std::endl;
         mUnitTestStatus = false;
     }
 
@@ -64,11 +66,11 @@ void UnitTest1::dmxOutput(EsFrame *pEs){
         }
     }
 
-    mFrameInTransit = false;
+    mFrameCounter++;
 
 }
 
-void UnitTest1::muxOutput(SimpleBuffer &rTsOutBuffer) {
+void UnitTest3::muxOutput(SimpleBuffer &rTsOutBuffer) {
     //Double to fail at non integer data
     double packets = (double) rTsOutBuffer.size() / 188.0;
     if (packets != (int) packets) {
@@ -78,6 +80,7 @@ void UnitTest1::muxOutput(SimpleBuffer &rTsOutBuffer) {
 
     uint8_t* lpData = rTsOutBuffer.data();
 
+
     for (int lI = 0 ; lI < packets ; lI++) {
         SimpleBuffer lIn;
         lIn.append(lpData+(lI*188), 188);
@@ -85,15 +88,15 @@ void UnitTest1::muxOutput(SimpleBuffer &rTsOutBuffer) {
     }
 }
 
-bool UnitTest1::runTest() {
+bool UnitTest3::runTest() {
 
-    mDemuxer.esOutCallback = std::bind(&UnitTest1::dmxOutput, this, std::placeholders::_1);
+    mDemuxer.esOutCallback = std::bind(&UnitTest3::dmxOutput, this, std::placeholders::_1);
 
     uint8_t testVector[TEST_VECTOR_SIZE];
     std::map<uint8_t, int> gStreamPidMap;
     gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
-    MpegTsMuxer lMuxer(gStreamPidMap, PMT_PID, VIDEO_PID);
-    lMuxer.tsOutCallback = std::bind(&UnitTest1::muxOutput, this, std::placeholders::_1);
+    MpegTsMuxer lMuxer(gStreamPidMap, PMT_PID, PCR_PID);
+    lMuxer.tsOutCallback = std::bind(&UnitTest3::muxOutput, this, std::placeholders::_1);
 
     //Make Vector
     for (int x = 0; x < TEST_VECTOR_SIZE; x++) {
@@ -116,16 +119,11 @@ bool UnitTest1::runTest() {
         lEsFrame.mRandomAccess = (x%10)?0:1;
         lEsFrame.mCompleted = true;
 
-        mFrameInTransit = true;
-
-        lMuxer.encode(lEsFrame);
-
-        if (mFrameInTransit) {
-            std::cout << "Frame " << unsigned(x) << " not muxed/demuxed corectly" << std::endl;
-            mUnitTestStatus = false;
+        if (x == 2) {
+            std::cout << "catch me " << std::endl;
         }
 
-        mFrameCounter++;
+        lMuxer.encode(lEsFrame);
     }
 
     if (x != mFrameCounter) {

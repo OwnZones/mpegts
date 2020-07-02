@@ -36,7 +36,7 @@
 
 void UnitTest2::dmxOutput(EsFrame *pEs){
 
-
+    //Is the frame correctly marked as mRandomAccess
     if ((mFrameCounter%10)?0:1 != pEs->mRandomAccess) {
         std::cout << "mRandomAccess indication error: " << unsigned(pEs->mRandomAccess) << " Frame -> " << unsigned(mFrameCounter) << std::endl;
         mUnitTestStatus = false;
@@ -44,7 +44,7 @@ void UnitTest2::dmxOutput(EsFrame *pEs){
 
     //verify expected size
     if (pEs->mData->size() != mFrameCounter ) {
-        std::cout << "Frame size missmatch" << unsigned(pEs->mData->size()) << std::endl;
+        std::cout << "Frame size missmatch " << unsigned(pEs->mData->size()) << std::endl;
         mUnitTestStatus = false;
     }
 
@@ -64,12 +64,11 @@ void UnitTest2::dmxOutput(EsFrame *pEs){
         }
     }
 
-    mFrameCounter++;
-
+    mFrameInTransit = false;
 }
 
 void UnitTest2::muxOutput(SimpleBuffer &rTsOutBuffer) {
-    //Double to fail at non integer data and be able to visualize in the print-out
+    //Double to fail at non integer data
     double packets = (double) rTsOutBuffer.size() / 188.0;
     if (packets != (int) packets) {
         std::cout << "Payload not X * 188 " << std::endl;
@@ -113,7 +112,16 @@ bool UnitTest2::runTest() {
         lEsFrame.mRandomAccess = (x%10)?0:1;
         lEsFrame.mCompleted = true;
 
+        mFrameInTransit = true;
+
         lMuxer.encode(lEsFrame);
+
+        if (mFrameInTransit) {
+            std::cout << "Frame " << unsigned(x) << " not muxed/demuxed corectly" << std::endl;
+            mUnitTestStatus = false;
+        }
+
+        mFrameCounter++;
     }
 
     if (x != mFrameCounter) {

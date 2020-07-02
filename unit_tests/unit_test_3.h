@@ -2,14 +2,14 @@
 // Created by Anders Cedronius on 2020-07-01.
 //
 
-#ifndef MPEGTS_UNIT_TEST_1_H
-#define MPEGTS_UNIT_TEST_1_H
+#ifndef MPEGTS_UNIT_TEST_3_H
+#define MPEGTS_UNIT_TEST_3_H
 
 #include <iostream>
 #include "mpegts_demuxer.h"
 #include "mpegts_muxer.h"
 
-class UnitTest1 {
+class UnitTest3 {
 public:
     bool runTest();
 private:
@@ -19,7 +19,6 @@ private:
     MpegTsDemuxer mDemuxer;
     int mFrameCounter = 1;
     bool mUnitTestStatus = true;
-    bool mFrameInTransit = false;
 };
 
-#endif //MPEGTS_UNIT_TEST_1_H
+#endif //MPEGTS_UNIT_TEST_3_H
