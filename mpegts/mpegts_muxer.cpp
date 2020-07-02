@@ -193,9 +193,10 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                     if (lFirst) {
                         //We need to move the PES header
                         size_t pesHeaderSize = lPos - (lPacket.data()[4] + 5);
-                        uint8_t pesHeader[pesHeaderSize];
-                        memcpy(&pesHeader[0],lpBase,pesHeaderSize);
-                        memcpy(lpBase+lStuffSize,&pesHeader[0],pesHeaderSize);
+                        uint8_t *pesHeader = new uint8_t[pesHeaderSize];
+                        memcpy(pesHeader,lpBase,pesHeaderSize);
+                        memcpy(lpBase+lStuffSize,pesHeader,pesHeaderSize);
+                        delete[] pesHeader;
                     } else {
                         lPacket.set_data(lpBase - lPacket.data() + lStuffSize, lpBase,
                                          lPacket.data() + lPacket.pos() - lpBase);
