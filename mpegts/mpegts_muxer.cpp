@@ -137,7 +137,16 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                 lTsHeader.encode(lPacket);
                 adapt_field_header.encode(lPacket);
                 writePcr(lPacket, rFrame.mDts); //Fixme DTS??
-            } else {
+            } else if (rFrame.mRandomAccess) {
+                lTsHeader.mAdaptationFieldControl |= 0x02;
+                AdaptationFieldHeader adapt_field_header;
+                adapt_field_header.mAdaptationFieldLength = 0x01;
+                adapt_field_header.mRandomAccessIndicator = rFrame.mRandomAccess;
+
+                lTsHeader.encode(lPacket);
+                adapt_field_header.encode(lPacket);
+
+            } else{
                 lTsHeader.encode(lPacket);
             }
 
@@ -212,7 +221,6 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
   //              std::cout << "here" << std::endl;
 
                 if (lFirst) {
-
                     //we are here since there is no adaption field.. and first is set . That means we got a PES header.
                     lPacket.data()[3] |= 0x20;
                     uint8_t* lpBase = lPacket.data() + 4;
@@ -226,6 +234,9 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                     if (lStuffSize >= 2) {
                         lPacket.data()[5] = 0;
                         memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
+                    } else {
+                        int a;
+                        a++;
                     }
 
                     lPacket.skip(lStuffSize);
