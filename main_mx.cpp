@@ -6,7 +6,6 @@
 #include <fstream>
 #include <sstream>
 #include <thread>
-#include <mutex>
 #include <functional>
 #include "kissnet/kissnet.hpp"
 #include "mpegts_muxer.h"
@@ -14,10 +13,11 @@
 //If defined save TS data to file
 #define SAVE_TO_FILE
 #ifdef SAVE_TO_FILE
-#define SAVED_NUM_FRAMES 100*25
+#define SAVED_TS_NUM_SECONDS 25
 std::ofstream oMpegTs("../output.ts", std::ofstream::binary | std::ofstream::out);
-int savedOutputFrames = {0};
+int savedOutputSeconds = {0};
 bool savingFrames = {true};
+bool closeOnce = {false};
 #endif
 
 //AAC audio
@@ -51,7 +51,9 @@ uint64_t gPtsLoopDuration = 0;
 
 //Create the multiplexer
 MpegTsMuxer *gpMuxer;
-std::mutex gEncMtx;
+
+//Debug
+int fRCnt = {0};
 
 uint8_t* findNal(uint8_t *start, uint8_t *end)
 {
@@ -64,33 +66,25 @@ uint8_t* findNal(uint8_t *start, uint8_t *end)
     return p;
 }
 
-void muxOutput(EsFrame &rFrame){
-    std::lock_guard<std::mutex> lock(gEncMtx);
-#ifdef SAVE_TO_FILE
-    if (savedOutputFrames++ == SAVED_NUM_FRAMES) {
-        savingFrames = false;
-        oMpegTs.close();
-        std::cout << "Stopped saving to file." << std::endl;
-    }
-#endif
-    //Create your TS-Buffer
-    SimpleBuffer lTsOutBuffer;
-    //Multiplex your data
-    gpMuxer->encode(rFrame, lTsOutBuffer);
-
+void muxOutput(SimpleBuffer &rTsOutBuffer){
     //Double to fail at non integer data and be able to visualize in the print-out
-    double packets = (double)lTsOutBuffer.size() / 188.0;
+    double packets = (double)rTsOutBuffer.size() / 188.0;
     //std::cout << "Sending -> " << packets << " MPEG-TS packets" << std::endl;
-    char* lpData = lTsOutBuffer.data();
+    char* lpData = rTsOutBuffer.data();
     for (int lI = 0 ; lI < packets ; lI++) {
         mpegTsOut.send((const std::byte *)lpData+(lI*188), 188);
     #ifdef SAVE_TO_FILE
         if (savingFrames) {
             oMpegTs.write(lpData + (lI * 188), 188);
+        } else {
+            if (!closeOnce) {
+                oMpegTs.close();
+                std::cout << "Stopped saving to file." << std::endl;
+                closeOnce = true;
+            }
         }
     #endif
     }
-    lTsOutBuffer.clear(); //Not needed
 }
 
 void fakeAudioEncoder() {
@@ -143,7 +137,7 @@ void fakeAudioEncoder() {
                 lEsFrame.mRandomAccess = 0x01;
                 lEsFrame.mCompleted = true;
 
-                muxOutput(lEsFrame);
+                gpMuxer->encode(lEsFrame);
 
                 delete[] adtsFrame;
             }
@@ -238,7 +232,11 @@ void fakeVideoEncoder() {
                 lEsFrame.mRandomAccess = lIdrFound;
                 lEsFrame.mCompleted = true;
 
-                muxOutput(lEsFrame);
+                if (++fRCnt == 8) {
+                     std::cout << "Frame 8 PCR : 41580000" << std::endl;
+                }
+
+                gpMuxer->encode(lEsFrame);
 
                 delete[] videoNal;
             }
@@ -262,6 +260,8 @@ int main(int argc, char *argv[]) {
     gStreamPidMap[TYPE_AUDIO] = AUDIO_PID;
     gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
     gpMuxer = new MpegTsMuxer(gStreamPidMap, PMT_PID, VIDEO_PID);
+
+    gpMuxer->tsOutCallback = std::bind(&muxOutput, std::placeholders::_1);
 
     std::string lStartPTS;
     std::string lEndPTS;
@@ -301,6 +301,12 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Video FPS:" << unsigned(gVideoFrameCounter - lVideoFrameCounter) << std::endl;
         lVideoFrameCounter = gVideoFrameCounter;
+
+#ifdef SAVE_TO_FILE
+        if (savedOutputSeconds++ == SAVED_TS_NUM_SECONDS) {
+            savingFrames = false;
+        }
+#endif
     }
 
     //Will never execute

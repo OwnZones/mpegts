@@ -9,7 +9,8 @@ MpegTsDemuxer::MpegTsDemuxer()
 MpegTsDemuxer::~MpegTsDemuxer() {
 }
 
-int MpegTsDemuxer::decode(SimpleBuffer &rIn, EsFrame *&prOut) {
+uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
+    EsFrame *lEsFrame;
     while (!rIn.empty()) {
         int lPos = rIn.pos();
         TsHeader lTsHeader;
@@ -69,12 +70,13 @@ int MpegTsDemuxer::decode(SimpleBuffer &rIn, EsFrame *&prOut) {
         if (mEsFrames.find(lTsHeader.mPid) != mEsFrames.end()) {
             uint8_t lPcrFlag = 0;
             uint64_t lPcr = 0;
+            uint8_t lRandomAccessIndicator = 0;
             if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
                 AdaptationFieldHeader lAdaptionField;
                 lAdaptionField.decode(rIn);
+                lRandomAccessIndicator = lAdaptionField.mRandomAccessIndicator;
                 int lAdaptFieldLength = lAdaptionField.mAdaptationFieldLength;
-                lPcrFlag = lAdaptionField.mPcrFlag;
                 if (lAdaptionField.mPcrFlag == 1) {
                     lPcr = readPcr(rIn);
                     // just adjust buffer pos
@@ -87,18 +89,35 @@ int MpegTsDemuxer::decode(SimpleBuffer &rIn, EsFrame *&prOut) {
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
                 PESHeader lPesHeader;
                 if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
+
+                    mEsFrames[lTsHeader.mPid]->mRandomAccess = lRandomAccessIndicator;
+
                     if (mEsFrames[lTsHeader.mPid]->mCompleted) {
+                        mEsFrames[lTsHeader.mPid]->reset();
+                    } else if (mEsFrames[lTsHeader.mPid]->mData->size() && !mEsFrames[lTsHeader.mPid]->mCompleted) {
+                        //Its a broken frame deliver that as broken
+                        if (esOutCallback) {
+                            lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                            lEsFrame -> mBroken = true;
+                            esOutCallback(lEsFrame);
+                        }
+
                         mEsFrames[lTsHeader.mPid]->reset();
                     }
 
-                    if (!mEsFrames[lTsHeader.mPid]->empty()) {
-                        mEsFrames[lTsHeader.mPid]->mCompleted = true;
-                        mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
-                        prOut = mEsFrames[lTsHeader.mPid].get();
-                        // got the frame, reset pos
-                        rIn.skip(lPos - rIn.pos());
-                        return mEsFrames[lTsHeader.mPid]->mStreamType;
-                    }
+//                    if (!mEsFrames[lTsHeader.mPid]->empty()) {
+//                        mEsFrames[lTsHeader.mPid]->mCompleted = true;
+//                        mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
+//                        lEsFrame = mEsFrames[lTsHeader.mPid].get();
+//                        // got the frame, reset pos
+//                        rIn.skip(lPos - rIn.pos());
+//
+//                        if (esOutCallback) {
+//                            esOutCallback(lEsFrame);
+//                        }
+//
+//                        return mEsFrames[lTsHeader.mPid]->mStreamType;
+//                    }
 
                     lPesHeader.decode(rIn);
                     mEsFrames[lTsHeader.mPid]->mStreamId = lPesHeader.mStreamId;
@@ -110,14 +129,27 @@ int MpegTsDemuxer::decode(SimpleBuffer &rIn, EsFrame *&prOut) {
                         mEsFrames[lTsHeader.mPid]->mDts = readPts(rIn);
                     }
                     if (lPesHeader.mPesPacketLength != 0) {
-                        if ((lPesHeader.mPesPacketLength - 3 - lPesHeader.mHeaderDataLength) >= 188 ||
-                            (lPesHeader.mPesPacketLength - 3 - lPesHeader.mHeaderDataLength) < 0) {
+
+                        int payloadLength = lPesHeader.mPesPacketLength - 3 -
+                                            lPesHeader.mHeaderDataLength;
+
+                        if (payloadLength + rIn.pos() > 188 || payloadLength < 0) {
                             mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(),
                                                                      188 - (rIn.pos() - lPos));
                         } else {
                             mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(),
                                                                      lPesHeader.mPesPacketLength - 3 -
                                                                      lPesHeader.mHeaderDataLength);
+                        }
+
+                        if(mEsFrames[lTsHeader.mPid]->mData->size() == payloadLength) {
+                            mEsFrames[lTsHeader.mPid]->mCompleted = true;
+                            mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
+                            lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                            if (esOutCallback) {
+                                esOutCallback(lEsFrame);
+                            }
+                            mEsFrames[lTsHeader.mPid]->reset();
                         }
 
                         rIn.skip(188 - (rIn.pos() - lPos));
@@ -134,6 +166,10 @@ int MpegTsDemuxer::decode(SimpleBuffer &rIn, EsFrame *&prOut) {
                 } else {
                     mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(), 188 - (rIn.pos() - lPos));
                 }
+
+
+//Deliver here
+
             }
         } else if (mPcrId != 0 && mPcrId == lTsHeader.mPid) {
             AdaptationFieldHeader lAdaptField;

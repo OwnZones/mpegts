@@ -41,6 +41,7 @@ public:
     uint16_t mPid;
     uint16_t mExpectedPesPacketLength;
     bool mCompleted;
+    bool mBroken;
 };
 
 class TsHeader {
@@ -162,7 +163,7 @@ public:
     uint8_t mPcrFlag;                               // 1 bit
     uint8_t mElementaryStreamPriorityIndicator;   // 1 bit
     uint8_t mRandomAccessIndicator;                // 1 bit
-    uint8_t mSiscontinuityIndicator;                // 1 bit
+    uint8_t mDiscontinuityIndicator;                // 1 bit
 };
 
 class PESHeader {

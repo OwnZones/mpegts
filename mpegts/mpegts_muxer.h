@@ -10,6 +10,8 @@
 #include "simple_buffer.h"
 #include <map>
 #include <cstdint>
+#include <functional>
+#include <mutex>
 
 class MpegTsMuxer {
 public:
@@ -34,7 +36,9 @@ public:
 
     void createNull(SimpleBuffer &rSb);
 
-    void encode(EsFrame &rFrame, SimpleBuffer &rSb);
+    void encode(EsFrame &rFrame);
+
+    std::function<void(SimpleBuffer &rSb)> tsOutCallback = nullptr;
 
 
 private:
@@ -51,6 +55,8 @@ private:
     uint16_t mPcrPid;
 
     MuxType mMuxType = MuxType::unknown;
+
+    std::mutex mMuxMtx;
 
 };
 

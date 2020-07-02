@@ -60,8 +60,8 @@ void MpegTsMuxer::createPat(SimpleBuffer &rSb, uint16_t lPmtPid, uint8_t lCc) {
     uint32_t lCrc32 = crc32((uint8_t *)lPatSb.data() + 5, lPatSb.size() - 5);
     lPatSb.write_4bytes(lCrc32);
 
-    std::string lStuff(188 - lPatSb.size(), 0xff);
-    lPatSb.write_string(lStuff);
+    std::vector<uint8_t> lStuff(188 - lPatSb.size(), 0xff);
+    lPatSb.append((const uint8_t *)lStuff.data(),lStuff.size());
     rSb.append(lPatSb.data(), lPatSb.size());
 }
 
@@ -109,8 +109,9 @@ void MpegTsMuxer::createPmt(SimpleBuffer &rSb, std::map<uint8_t, int> lStreamPid
     // crc32
     uint32_t crc_32 = crc32((uint8_t *)lPmtSb.data() + 5, lPmtSb.size() - 5);
     lPmtSb.write_4bytes(crc_32);
-    std::string stuff(188 - lPmtSb.size(), 0xff);
-    lPmtSb.write_string(stuff);
+
+    std::vector<uint8_t> lStuff(188 - lPmtSb.size(), 0xff);
+    lPmtSb.append((const uint8_t *)lStuff.data(),lStuff.size());
     rSb.append(lPmtSb.data(), lPmtSb.size());
 }
 
@@ -164,31 +165,47 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
             } else {
                 writePts(lPacket, 2, rFrame.mPts);
             }
-            lFirst = false;
         } else {
             lTsHeader.encode(lPacket);
         }
 
         uint32_t lPos = lPacket.size();
         uint32_t lBodySize = 188 - lPos;
-        lPacket.write_string(std::string(lBodySize, 0));
+
+        std::vector<uint8_t> lFiller(lBodySize, 0x00);
+        lPacket.append((const uint8_t *)lFiller.data(),lFiller.size());
+
         lPacket.skip(lPos);
 
         uint32_t lInSize = rFrame.mData->size() - rFrame.mData->pos();
         if (lBodySize <=
-            lInSize) {    // MpegTsAdaptationFieldType::payload_only or MpegTsAdaptationFieldType::payload_adaption_both for AVC
-            //lPacket.write_string(pFrame->mData->read_string(lBodySize));
-            std::string lBodyString = rFrame.mData->read_string(lBodySize);
-            lPacket.set_data(lPos, lBodyString.c_str(), lBodyString.length());
+            lInSize) {
+            lPacket.set_data(lPos, rFrame.mData->data()+rFrame.mData->pos(), lBodySize);
+            rFrame.mData->skip(lBodySize);
         } else {
             uint16_t lStuffSize = lBodySize - lInSize;
+
+            //Take care of the case 1 stuffing byte
+
             if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
-                char *lpBase = lPacket.data() + 5 + lPacket.data()[4];
-                lPacket.set_data(lpBase - lPacket.data() + lStuffSize, lpBase, lPacket.data() + lPacket.pos() - lpBase);
-                memset(lpBase, 0xff, lStuffSize);
-                lPacket.skip(lStuffSize);
-                lPacket.data()[4] += lStuffSize;
+                uint8_t* lpBase = lPacket.data() + 5 + lPacket.data()[4];
+                    if (lFirst) {
+                        //We need to move the PES header
+                        size_t pesHeaderSize = lPos - (lPacket.data()[4] + 5);
+                        uint8_t pesHeader[pesHeaderSize];
+                        memcpy(&pesHeader[0],lpBase,pesHeaderSize);
+                        memcpy(lpBase+lStuffSize,&pesHeader[0],pesHeaderSize);
+                    } else {
+                        lPacket.set_data(lpBase - lPacket.data() + lStuffSize, lpBase,
+                                         lPacket.data() + lPacket.pos() - lpBase);
+                    }
+
+                   //
+                    memset(lpBase, 0xff, lStuffSize);
+                    lPacket.skip(lStuffSize);
+                    lPacket.data()[4] += lStuffSize;
+
             } else {
                 // adaptationFieldControl |= 0x20 == MpegTsAdaptationFieldType::payload_adaption_both
                 lPacket.data()[3] |= 0x20;
@@ -200,12 +217,12 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                     memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
                 }
             }
-            //lPacket.write_string(pFrame->mData->read_string(lInSize));
-            std::string lbodyString = rFrame.mData->read_string(lInSize);
-            lPacket.set_data(lPacket.pos(), lbodyString.c_str(), lbodyString.length());
+            lPacket.set_data(lPacket.pos(), rFrame.mData->data()+rFrame.mData->pos(), lInSize);
+            rFrame.mData->skip(lInSize);
         }
 
         rSb.append(lPacket.data(), lPacket.size());
+        lFirst = false;
     }
 }
 
@@ -224,7 +241,7 @@ void MpegTsMuxer::createPcr(SimpleBuffer &rSb) {
 
     AdaptationFieldHeader lAdaptField;
     lAdaptField.mAdaptationFieldLength = 188 - 4 - 1;
-    lAdaptField.mSiscontinuityIndicator = 0;
+    lAdaptField.mDiscontinuityIndicator = 0;
     lAdaptField.mRandomAccessIndicator = 0;
     lAdaptField.mElementaryStreamPriorityIndicator = 0;
     lAdaptField.mPcrFlag = 1;
@@ -251,14 +268,19 @@ void MpegTsMuxer::createNull(SimpleBuffer &rSb) {
     lTsHeader.encode(rSb);
 }
 
-void MpegTsMuxer::encode(EsFrame &rFrame, SimpleBuffer &rSb) {
+void MpegTsMuxer::encode(EsFrame &rFrame) {
+    std::lock_guard<std::mutex> lock(mMuxMtx);
+    SimpleBuffer lSb;
     if (shouldCreatePat()) {
         uint8_t lPatPmtCc = getCc(0);
-        createPat(rSb, mPmtPid, lPatPmtCc);
-        createPmt(rSb, mStreamPidMap, mPmtPid, lPatPmtCc);
+        createPat(lSb, mPmtPid, lPatPmtCc);
+        createPmt(lSb, mStreamPidMap, mPmtPid, lPatPmtCc);
     }
 
-    createPes(rFrame, rSb);
+    createPes(rFrame, lSb);
+    if (tsOutCallback) {
+        tsOutCallback(lSb);
+    }
 }
 
 uint8_t MpegTsMuxer::getCc(uint32_t lWithPid) {

@@ -12,6 +12,8 @@
 #include <cstdint>
 #include <memory>
 #include <map>
+#include <functional>
+#include <mutex>
 
 class MpegTsDemuxer {
 public:
@@ -19,8 +21,9 @@ public:
 
     virtual ~MpegTsDemuxer();
 
-public:
-    int decode(SimpleBuffer &rIn, EsFrame *&prOut);
+    uint8_t decode(SimpleBuffer &rIn);
+
+    std::function<void(EsFrame *pEs)> esOutCallback = nullptr;
 
     // stream, pid
     std::map<uint8_t, int> mStreamPidMap;

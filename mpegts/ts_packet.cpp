@@ -9,7 +9,7 @@ EsFrame::EsFrame()
 }
 
 EsFrame::EsFrame(uint8_t lSt)
-        : mStreamType(lSt), mCompleted(false), mPid(0), mExpectedPesPacketLength(0) {
+        : mStreamType(lSt), mCompleted(false), mBroken(false), mPid(0), mExpectedPesPacketLength(0) {
     mData.reset(new SimpleBuffer);
 }
 
@@ -20,6 +20,7 @@ bool EsFrame::empty() {
 void EsFrame::reset() {
     mPid = 0;
     mCompleted = false;
+    mBroken = false;
     mExpectedPesPacketLength = 0;
     mData.reset(new SimpleBuffer);
 }
@@ -309,7 +310,7 @@ void PMTHeader::print() {
 AdaptationFieldHeader::AdaptationFieldHeader()
         : mAdaptationFieldLength(0), mAdaptationFieldExtensionFlag(0), mTransportPrivateDataFlag(0),
           mSplicingPointFlag(0), mOpcrFlag(0), mPcrFlag(0), mElementaryStreamPriorityIndicator(0),
-          mRandomAccessIndicator(0), mSiscontinuityIndicator(0) {
+          mRandomAccessIndicator(0), mDiscontinuityIndicator(0) {
 
 }
 
@@ -327,7 +328,7 @@ void AdaptationFieldHeader::encode(SimpleBuffer &rSb) {
         lVal |= (mPcrFlag << 4) & 0x10;
         lVal |= (mElementaryStreamPriorityIndicator << 5) & 0x20;
         lVal |= (mRandomAccessIndicator << 6) & 0x40;
-        lVal |= (mSiscontinuityIndicator << 7) & 0x80;
+        lVal |= (mDiscontinuityIndicator << 7) & 0x80;
         rSb.write_1byte(lVal);
     }
 }
@@ -343,7 +344,7 @@ void AdaptationFieldHeader::decode(SimpleBuffer &rSb) {
         mPcrFlag = (lVal >> 4) & 0x01;
         mElementaryStreamPriorityIndicator = (lVal >> 5) & 0x01;
         mRandomAccessIndicator = (lVal >> 6) & 0x01;
-        mSiscontinuityIndicator = (lVal >> 7) & 0x01;
+        mDiscontinuityIndicator = (lVal >> 7) & 0x01;
     }
 }
 
