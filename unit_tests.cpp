@@ -8,6 +8,7 @@
 #include "unit_test_3.h"
 #include "unit_test_4.h"
 #include "unit_test_5.h"
+#include "unit_test_6.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Running all unit tests." << std::endl;
@@ -57,6 +58,14 @@ int main(int argc, char *argv[]) {
     UnitTest5 unitTest5;
     if (!unitTest5.runTest()) {
         std::cout << "Unit test 5 failed" << std::endl;
+        returnCode = EXIT_FAILURE;
+    }
+
+    //Check PTS/DTS/PCR values
+    std::cout << "Unit test6 started." << std::endl;
+    UnitTest6 unitTest6;
+    if (!unitTest6.runTest()) {
+        std::cout << "Unit test 6 failed" << std::endl;
         returnCode = EXIT_FAILURE;
     }
 

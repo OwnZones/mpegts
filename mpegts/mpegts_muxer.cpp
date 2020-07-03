@@ -136,7 +136,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
 
                 lTsHeader.encode(lPacket);
                 adapt_field_header.encode(lPacket);
-                writePcr(lPacket, rFrame.mDts); //Fixme DTS??
+                writePcr(lPacket, rFrame.mPcr);
             } else if (rFrame.mRandomAccess) {
                 lTsHeader.mAdaptationFieldControl |= 0x02;
                 AdaptationFieldHeader adapt_field_header;
@@ -269,9 +269,8 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
     }
 }
 
-//Fixme PCR implementation needs to be changed
-void MpegTsMuxer::createPcr(SimpleBuffer &rSb) {
-    uint64_t lPcr = 0;
+void MpegTsMuxer::createPcr(uint64_t lPcr) {
+    std::lock_guard<std::mutex> lock(mMuxMtx);
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
     lTsHeader.mTransportErrorIndicator = 0;
@@ -293,12 +292,19 @@ void MpegTsMuxer::createPcr(SimpleBuffer &rSb) {
     lAdaptField.mTransportPrivateDataFlag = 0;
     lAdaptField.mAdaptationFieldExtensionFlag = 0;
 
-    lTsHeader.encode(rSb);
-    lAdaptField.encode(rSb);
-    writePcr(rSb, lPcr);
+    SimpleBuffer lSb;
+    lTsHeader.encode(lSb);
+    lAdaptField.encode(lSb);
+    writePcr(lSb, lPcr);
+    std::vector<uint8_t> lStuff(188 - lSb.size(), 0xff);
+    lSb.append((const uint8_t *)lStuff.data(),lStuff.size());
+    if (tsOutCallback) {
+        tsOutCallback(lSb);
+    }
 }
 
-void MpegTsMuxer::createNull(SimpleBuffer &rSb) {
+void MpegTsMuxer::createNull() {
+    std::lock_guard<std::mutex> lock(mMuxMtx);
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
     lTsHeader.mTransportErrorIndicator = 0;
@@ -308,7 +314,11 @@ void MpegTsMuxer::createNull(SimpleBuffer &rSb) {
     lTsHeader.mTransportScramblingControl = 0;
     lTsHeader.mAdaptationFieldControl = MpegTsAdaptationFieldType::mPayloadOnly;
     lTsHeader.mContinuityCounter = 0;
-    lTsHeader.encode(rSb);
+    SimpleBuffer lSb;
+    lTsHeader.encode(lSb);
+    if (tsOutCallback) {
+        tsOutCallback(lSb);
+    }
 }
 
 void MpegTsMuxer::encode(EsFrame &rFrame) {

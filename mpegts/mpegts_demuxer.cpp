@@ -78,6 +78,11 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                 int lAdaptFieldLength = lAdaptionField.mAdaptationFieldLength;
                 if (lAdaptionField.mPcrFlag == 1) {
                     lPcr = readPcr(rIn);
+
+                    if (pcrOutCallback) {
+                        pcrOutCallback(lPcr);
+                    }
+
                     // just adjust buffer pos
                     lAdaptFieldLength -= 6;
                 }
@@ -172,6 +177,9 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
             AdaptationFieldHeader lAdaptField;
             lAdaptField.decode(rIn);
             uint64_t lPcr = readPcr(rIn);
+            if (pcrOutCallback) {
+                pcrOutCallback(lPcr);
+            }
         }
         rIn.skip(188 - (rIn.pos() - lPos));
     }

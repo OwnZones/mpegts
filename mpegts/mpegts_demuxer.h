@@ -24,6 +24,7 @@ public:
     uint8_t decode(SimpleBuffer &rIn);
 
     std::function<void(EsFrame *pEs)> esOutCallback = nullptr;
+    std::function<void(uint64_t lPcr)> pcrOutCallback = nullptr;
 
     // stream, pid
     std::map<uint8_t, int> mStreamPidMap;

@@ -122,7 +122,7 @@ void fakeAudioEncoder() {
                 adtsFile.read ((char*)&adtsFrame[0], lFileSize);
                 adtsFile.close();
 
-                lPts +=  90000/(48000/1024);
+                lPts +=  90000.0/(48000.0/1024.0);
                 uint64_t lRecalcPts = lPts + lCurrentOffset;
 
                 lEsFrame.mData = std::make_shared<SimpleBuffer>();
@@ -224,7 +224,7 @@ void fakeVideoEncoder() {
                 lEsFrame.mData->append(videoNal, lFileSize);
                 lEsFrame.mPts = lRecalcPts;
                 lEsFrame.mDts = lRecalcDts;
-                lEsFrame.mPcr = 0;
+                lEsFrame.mPcr = lRecalcDts * 300;
                 lEsFrame.mStreamType = TYPE_VIDEO;
                 lEsFrame.mStreamId = 224;
                 lEsFrame.mPid = VIDEO_PID;

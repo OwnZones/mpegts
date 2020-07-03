@@ -32,9 +32,9 @@ public:
 
     void createPes(EsFrame &rFrame, SimpleBuffer &rSb);
 
-    void createPcr(SimpleBuffer &rSb);
+    void createPcr(uint64_t lPcr);
 
-    void createNull(SimpleBuffer &rSb);
+    void createNull();
 
     void encode(EsFrame &rFrame);
 
