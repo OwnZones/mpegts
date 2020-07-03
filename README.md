@@ -6,9 +6,9 @@ A simple C++ implementation of a MPEG-TS Muxer and Demuxer.
 
 The multiplexer and demultiplexer is **FAR** from supporting ITU-T H.222. Only the basics are supported meaning a video stream and a audio stream without using any 'trick mode' flags or extensions. Enough for multiplexing some elementary streams to watch using FFPLAY for example. This code should not be used to do anything advanced as it's not suited for that.
 
-This is a fork of the project as noted above. This fork adds support for using the multiplexer / demultiplexer as a library into your projects among other features as can be seen in the examples and unit tests.
+This is a [cloned](https://github.com/akanchi/mpegts) projet. This clone adds support for using the multiplexer / demultiplexer as a library into your projects among other features as can be seen in the examples and unit tests.
 
-The upstream master also contains a lot of serious bugs fixed in this fork. There might still be bugs in the code please let me know if you find any.
+The upstream master project also contains a lot of serious bugs fixed in this clone. There might still be bugs in the code please let me know if you find any.
 
 
 **Build status ->**
