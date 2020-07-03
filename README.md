@@ -19,6 +19,10 @@ The upstream master also contains a lot of serious bugs fixed in this fork. Ther
 
 ![MacOS](https://github.com/andersc/mpegts/workflows/MacOS/badge.svg)
 
+**Unit tests status ->**
+
+![Unit tests](https://github.com/andersc/mpegts/workflows/Unit%20tests/badge.svg)
+
 
 # Build
 
