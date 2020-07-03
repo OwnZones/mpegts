@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     //Same as Unit Test 2 but is not embedding PCR
     std::cout << "Unit test4 started." << std::endl;
     UnitTest4 unitTest4;
-    if (!unitTest3.runTest()) {
+    if (!unitTest4.runTest()) {
         std::cout << "Unit test 4 failed" << std::endl;
         returnCode = EXIT_FAILURE;
     }
