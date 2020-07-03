@@ -13,15 +13,15 @@ The upstream master also contains a lot of serious bugs fixed in this fork. Ther
 
 **Build status ->**
 
-![Ubuntu 18.04](https://github.com/andersc/mpegts/workflows/Ubuntu%2018.04/badge.svg)
+![Ubuntu 18.04](https://github.com/Unit-X/mpegts/workflows/Ubuntu%2018.04/badge.svg)
 
-![Windows](https://github.com/andersc/mpegts/workflows/Windows/badge.svg)
+![Windows](https://github.com/Unit-X/mpegts/workflows/Windows/badge.svg)
 
-![MacOS](https://github.com/andersc/mpegts/workflows/MacOS/badge.svg)
+![MacOS](https://github.com/Unit-X/mpegts/workflows/MacOS/badge.svg)
 
 **Unit tests status ->**
 
-![Unit tests](https://github.com/andersc/mpegts/workflows/Unit%20tests/badge.svg)
+![Unit tests](https://github.com/Unit-X/mpegts/workflows/Unit%20tests/badge.svg)
 
 
 # Build
