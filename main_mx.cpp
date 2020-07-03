@@ -224,7 +224,7 @@ void fakeVideoEncoder() {
                 lEsFrame.mData->append(videoNal, lFileSize);
                 lEsFrame.mPts = lRecalcPts;
                 lEsFrame.mDts = lRecalcDts;
-                lEsFrame.mPcr = lRecalcDts * 300;
+                lEsFrame.mPcr = lRecalcDts;
                 lEsFrame.mStreamType = TYPE_VIDEO;
                 lEsFrame.mStreamId = 224;
                 lEsFrame.mPid = VIDEO_PID;
