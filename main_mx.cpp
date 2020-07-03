@@ -232,10 +232,6 @@ void fakeVideoEncoder() {
                 lEsFrame.mRandomAccess = lIdrFound;
                 lEsFrame.mCompleted = true;
 
-                if (++fRCnt == 8) {
-                     std::cout << "Frame 8 PCR : 41580000" << std::endl;
-                }
-
                 gpMuxer->encode(lEsFrame);
 
                 delete[] videoNal;
