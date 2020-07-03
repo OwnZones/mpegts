@@ -7,6 +7,7 @@
 #include "unit_test_2.h"
 #include "unit_test_3.h"
 #include "unit_test_4.h"
+#include "unit_test_5.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Running all unit tests." << std::endl;
@@ -47,6 +48,15 @@ int main(int argc, char *argv[]) {
     UnitTest4 unitTest4;
     if (!unitTest4.runTest()) {
         std::cout << "Unit test 4 failed" << std::endl;
+        returnCode = EXIT_FAILURE;
+    }
+
+    //Demultiplex a PES where the length is exactly 2 TS packets where the last TS packet is
+    //able to carry all data meaning there is no need for a adaption field (stuffing)
+    std::cout << "Unit test5 started." << std::endl;
+    UnitTest5 unitTest5;
+    if (!unitTest5.runTest()) {
+        std::cout << "Unit test 5 failed" << std::endl;
         returnCode = EXIT_FAILURE;
     }
 
