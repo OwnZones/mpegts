@@ -57,7 +57,7 @@ It's simple to add the MPEG-TS multiplexer/demultiplexer into your existing CMak
 ```
 include(ExternalProject)
 ExternalProject_Add(project_mpegts
-        GIT_REPOSITORY https://github.com/andersc/mpegts
+        GIT_REPOSITORY https://github.com/Unit-X/mpegts.git
         GIT_SUBMODULES ""
         UPDATE_COMMAND git pull
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/mpegts
