@@ -269,7 +269,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
     }
 }
 
-void MpegTsMuxer::createPcr(uint64_t lPcr) {
+void MpegTsMuxer::createPcr(uint64_t lPcr, uint8_t lTag) {
     std::lock_guard<std::mutex> lock(mMuxMtx);
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
@@ -299,11 +299,11 @@ void MpegTsMuxer::createPcr(uint64_t lPcr) {
     std::vector<uint8_t> lStuff(188 - lSb.size(), 0xff);
     lSb.append((const uint8_t *)lStuff.data(),lStuff.size());
     if (tsOutCallback) {
-        tsOutCallback(lSb);
+        tsOutCallback(lSb, lTag);
     }
 }
 
-void MpegTsMuxer::createNull() {
+void MpegTsMuxer::createNull(uint8_t lTag) {
     std::lock_guard<std::mutex> lock(mMuxMtx);
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
@@ -317,11 +317,11 @@ void MpegTsMuxer::createNull() {
     SimpleBuffer lSb;
     lTsHeader.encode(lSb);
     if (tsOutCallback) {
-        tsOutCallback(lSb);
+        tsOutCallback(lSb, lTag);
     }
 }
 
-void MpegTsMuxer::encode(EsFrame &rFrame) {
+void MpegTsMuxer::encode(EsFrame &rFrame, uint8_t lTag) {
     std::lock_guard<std::mutex> lock(mMuxMtx);
     SimpleBuffer lSb;
     if (shouldCreatePat()) {
@@ -332,7 +332,7 @@ void MpegTsMuxer::encode(EsFrame &rFrame) {
 
     createPes(rFrame, lSb);
     if (tsOutCallback) {
-        tsOutCallback(lSb);
+        tsOutCallback(lSb, lTag);
     }
 }
 

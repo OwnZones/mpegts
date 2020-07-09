@@ -32,13 +32,13 @@ public:
 
     void createPes(EsFrame &rFrame, SimpleBuffer &rSb);
 
-    void createPcr(uint64_t lPcr);
+    void createPcr(uint64_t lPcr, uint8_t lTag = 0);
 
-    void createNull();
+    void createNull(uint8_t lTag = 0);
 
-    void encode(EsFrame &rFrame);
+    void encode(EsFrame &rFrame, uint8_t lTag = 0);
 
-    std::function<void(SimpleBuffer &rSb)> tsOutCallback = nullptr;
+    std::function<void(SimpleBuffer &rSb, uint8_t lTag)> tsOutCallback = nullptr;
 
 
 private:
