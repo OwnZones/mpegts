@@ -10,7 +10,11 @@ MpegTsDemuxer::~MpegTsDemuxer() {
 }
 
 uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
-    while (!rIn.empty()) {
+    if (mRestData.size()) {
+        rIn.prepend(mRestData.data(),mRestData.size());
+        mRestData.clear();
+    }
+    while ((rIn.size() - rIn.pos()) >= 188 ) {
         int lPos = rIn.pos();
         TsHeader lTsHeader;
         lTsHeader.decode(rIn);
@@ -183,6 +187,11 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
         }
         rIn.skip(188 - (rIn.pos() - lPos));
     }
+
+    if (rIn.size()-rIn.pos()) {
+        mRestData.append(rIn.data()+rIn.pos(),rIn.size()-rIn.pos());
+    }
+
     rIn.clear();
     return 0;
 }

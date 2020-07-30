@@ -70,6 +70,18 @@ void SimpleBuffer::append(const uint8_t* bytes, int size)
     mData.insert(mData.end(), bytes, bytes + size);
 }
 
+void SimpleBuffer::prepend(const uint8_t* bytes, int size)
+{
+    if (!bytes || size <= 0) {
+#ifdef DEBUG
+        std::cout << " prepend error " << std::endl;
+#endif
+        return;
+    }
+
+    mData.insert(mData.begin(), bytes, bytes + size);
+}
+
 int8_t SimpleBuffer::read1Byte()
 {
     assert(require(1));

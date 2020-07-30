@@ -42,5 +42,6 @@ private:
     // pid, Elementary data frame
     std::map<int, std::shared_ptr<EsFrame>> mEsFrames;
     int mPcrId;
+    SimpleBuffer mRestData;
 };
 

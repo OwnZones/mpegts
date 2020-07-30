@@ -21,6 +21,7 @@ public:
     void write4Bytes(int32_t val);
     void write8Bytes(int64_t val);
     void append(const uint8_t* bytes, int size);
+    void prepend(const uint8_t* bytes, int size);
 
     int8_t read1Byte();
     int16_t read2Bytes();
