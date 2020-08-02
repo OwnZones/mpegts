@@ -18,7 +18,10 @@ jobs:
         sudo apt -y install ffmpeg
         ./generate_bars.sh
     - name: CMake set-up
-      run: cmake -DCMAKE_BUILD_TYPE=Release .
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
     - name: make
       run: make mpeg_ts_unit_tests
     - name: Unit tests
