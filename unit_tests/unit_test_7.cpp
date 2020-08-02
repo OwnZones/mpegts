@@ -8,11 +8,9 @@
 #include "unit_test_7.h"
 
 void UnitTest7::dmxOutputPcr(uint64_t lPcr) {
-
 }
 
 void UnitTest7::dmxOutput(EsFrame *pEs){
-  //  std::cout << "Frame." << std::endl;
     mFrameCounter ++;
     mUnitTestStatus = true;
 }
@@ -21,7 +19,7 @@ bool UnitTest7::runTest() {
 
     std::random_device dev;
     std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> lRandGenerator(1,300); // distribution in range [1, 6]
+    std::uniform_int_distribution<std::mt19937::result_type> lRandGenerator(1,300); // distribution in range [1, 300]
 
     mDemuxer.esOutCallback = std::bind(&UnitTest7::dmxOutput, this, std::placeholders::_1);
     mDemuxer.pcrOutCallback = std::bind(&UnitTest7::dmxOutputPcr, this, std::placeholders::_1);

@@ -9,7 +9,7 @@
 #include "unit_test_4.h"
 #include "unit_test_5.h"
 #include "unit_test_6.h"
-//#include "unit_test_7.h"
+#include "unit_test_7.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Running all unit tests." << std::endl;
@@ -70,7 +70,6 @@ int main(int argc, char *argv[]) {
         returnCode = EXIT_FAILURE;
     }
 
-    /*
     //Check non 188-bytes TS packet demuxer feed
     std::cout << "Unit test7 started." << std::endl;
     UnitTest7 unitTest7;
@@ -78,7 +77,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Unit test 7 failed" << std::endl;
         returnCode = EXIT_FAILURE;
     }
-     */
+
 
     if (returnCode == EXIT_FAILURE) {
         std::cout << "Unit tests failed." << std::endl;
