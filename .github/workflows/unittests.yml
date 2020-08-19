@@ -13,10 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: generate ts file
-      run: |
-        sudo apt -y install ffmpeg
-        ./generate_bars.sh
+    - name: get the ts test file
+      run: wget https://github.com/andersc/assets/raw/master/bars.ts
     - name: build and run
       run: |
         mkdir build
