@@ -234,11 +234,8 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                     if (lStuffSize >= 2) {
                         lPacket.data()[5] = 0;
                         memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
-                    } else {
-                        int a;
-                        a++;
                     }
-
+                    
                     lPacket.skip(lStuffSize);
                     lPacket.data()[4] = lStuffSize - 1;
                     if (lStuffSize >= 2) {
