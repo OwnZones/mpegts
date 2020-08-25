@@ -235,7 +235,7 @@ void MpegTsMuxer::createPes(EsFrame &rFrame, SimpleBuffer &rSb) {
                         lPacket.data()[5] = 0;
                         memset(&(lPacket.data()[6]), 0xff, lStuffSize - 2);
                     }
-                    
+
                     lPacket.skip(lStuffSize);
                     lPacket.data()[4] = lStuffSize - 1;
                     if (lStuffSize >= 2) {
@@ -296,7 +296,7 @@ void MpegTsMuxer::createPcr(uint64_t lPcr, uint8_t lTag) {
     std::vector<uint8_t> lStuff(188 - lSb.size(), 0xff);
     lSb.append((const uint8_t *)lStuff.data(),lStuff.size());
     if (tsOutCallback) {
-        tsOutCallback(lSb, lTag);
+        tsOutCallback(lSb, lTag, false);
     }
 }
 
@@ -314,7 +314,7 @@ void MpegTsMuxer::createNull(uint8_t lTag) {
     SimpleBuffer lSb;
     lTsHeader.encode(lSb);
     if (tsOutCallback) {
-        tsOutCallback(lSb, lTag);
+        tsOutCallback(lSb, lTag, false);
     }
 }
 
@@ -329,7 +329,7 @@ void MpegTsMuxer::encode(EsFrame &rFrame, uint8_t lTag) {
 
     createPes(rFrame, lSb);
     if (tsOutCallback) {
-        tsOutCallback(lSb, lTag);
+        tsOutCallback(lSb, lTag, rFrame.mRandomAccess);
     }
 }
 

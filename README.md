@@ -1,6 +1,5 @@
 # MPEG-TS
 
-**This fork is WIP.. meaning you can't trust API's or examples untill this line of text is gone**
 
 A simple C++ implementation of a MPEG-TS Muxer and Demuxer.
 
@@ -48,7 +47,7 @@ cmake --build . --config Debug
 
 Outputs the mpegts static library and the example executables 
 
-# Invoke into your CMake project
+# Use in your CMake project
 
 It's simple to add the MPEG-TS multiplexer/demultiplexer into your existing CMake project. Just follow the simple steps below.
 
