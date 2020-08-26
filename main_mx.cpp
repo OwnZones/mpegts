@@ -66,7 +66,8 @@ uint8_t* findNal(uint8_t *start, uint8_t *end)
     return p;
 }
 
-void muxOutput(SimpleBuffer &rTsOutBuffer){
+void muxOutput(SimpleBuffer &rTsOutBuffer, uint8_t lTag, bool lRandom){
+
     //Double to fail at non integer data and be able to visualize in the print-out
     double packets = (double)rTsOutBuffer.size() / 188.0;
     //std::cout << "Sending -> " << packets << " MPEG-TS packets" << std::endl;
@@ -257,7 +258,7 @@ int main(int argc, char *argv[]) {
     gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
     gpMuxer = new MpegTsMuxer(gStreamPidMap, PMT_PID, VIDEO_PID);
 
-    gpMuxer->tsOutCallback = std::bind(&muxOutput, std::placeholders::_1);
+    gpMuxer->tsOutCallback = std::bind(&muxOutput, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
     std::string lStartPTS;
     std::string lEndPTS;

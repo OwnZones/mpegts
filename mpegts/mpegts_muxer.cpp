@@ -318,7 +318,7 @@ void MpegTsMuxer::createNull(uint8_t lTag) {
     }
 }
 
-void MpegTsMuxer::encode(EsFrame &rFrame, uint8_t lTag) {
+void MpegTsMuxer::encode(EsFrame &rFrame, uint8_t lTag, bool lRandomAccess) {
     std::lock_guard<std::mutex> lock(mMuxMtx);
     SimpleBuffer lSb;
     if (shouldCreatePat()) {
@@ -329,7 +329,7 @@ void MpegTsMuxer::encode(EsFrame &rFrame, uint8_t lTag) {
 
     createPes(rFrame, lSb);
     if (tsOutCallback) {
-        tsOutCallback(lSb, lTag, rFrame.mRandomAccess);
+        tsOutCallback(lSb, lTag, lRandomAccess);
     }
 }
 

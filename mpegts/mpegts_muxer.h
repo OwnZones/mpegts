@@ -36,7 +36,7 @@ public:
 
     void createNull(uint8_t lTag = 0);
 
-    void encode(EsFrame &rFrame, uint8_t lTag = 0);
+    void encode(EsFrame &rFrame, uint8_t lTag = 0, bool lRandomAccess = false);
 
     std::function<void(SimpleBuffer &rSb, uint8_t lTag, bool lRandomAccess)> tsOutCallback = nullptr;
 
