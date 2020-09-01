@@ -15,14 +15,14 @@
 
 class MpegTsMuxer {
 public:
-    enum MuxType: uint8_t {
+    enum class MuxType: uint8_t {
         unknown,
-        segmentType,
-        h222Type,
-        dvbType
+        segmentType, //Generate a PAT + PMT when lRandomAccess is set to true in the encode() method
+        h222Type, //Not implemented correct
+        dvbType //Not implemented at all
     };
 
-    MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid, MuxType lType = MuxType::segmentType);
+    MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid, MuxType lType);
 
     virtual ~MpegTsMuxer();
 

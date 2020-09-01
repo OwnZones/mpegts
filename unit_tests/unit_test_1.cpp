@@ -92,7 +92,7 @@ bool UnitTest1::runTest() {
     uint8_t testVector[TEST_VECTOR_SIZE];
     std::map<uint8_t, int> gStreamPidMap;
     gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
-    MpegTsMuxer lMuxer(gStreamPidMap, PMT_PID, VIDEO_PID);
+    MpegTsMuxer lMuxer(gStreamPidMap, PMT_PID, VIDEO_PID, MpegTsMuxer::MuxType::h222Type);
     lMuxer.tsOutCallback = std::bind(&UnitTest1::muxOutput, this, std::placeholders::_1);
 
     //Make Vector

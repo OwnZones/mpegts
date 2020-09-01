@@ -321,7 +321,12 @@ void MpegTsMuxer::createNull(uint8_t lTag) {
 void MpegTsMuxer::encode(EsFrame &rFrame, uint8_t lTag, bool lRandomAccess) {
     std::lock_guard<std::mutex> lock(mMuxMtx);
     SimpleBuffer lSb;
-    if (shouldCreatePat()) {
+
+    if (mMuxType == MpegTsMuxer::MuxType::segmentType && lRandomAccess) {
+        uint8_t lPatPmtCc = getCc(0);
+        createPat(lSb, mPmtPid, lPatPmtCc);
+        createPmt(lSb, mStreamPidMap, mPmtPid, lPatPmtCc);
+    } else if (mMuxType == MpegTsMuxer::MuxType::h222Type && shouldCreatePat()) {  //FIXME h222Type is NOT implemented correct
         uint8_t lPatPmtCc = getCc(0);
         createPat(lSb, mPmtPid, lPatPmtCc);
         createPmt(lSb, mStreamPidMap, mPmtPid, lPatPmtCc);
