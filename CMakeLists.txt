@@ -15,6 +15,7 @@ endmacro()
 find_package (Threads REQUIRED)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mpegts/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/)
