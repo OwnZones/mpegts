@@ -44,6 +44,7 @@ public:
 private:
     uint8_t getCc(uint32_t lWithPid);
 
+    uint32_t mCurrentIndex = 0;
     bool shouldCreatePat();
 
     std::map<uint32_t, uint8_t> mPidCcMap;

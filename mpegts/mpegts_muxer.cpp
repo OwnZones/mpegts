@@ -5,6 +5,7 @@
 
 static const uint16_t MPEGTS_NULL_PACKET_PID = 0x1FFF;
 static const uint16_t MPEGTS_PAT_PID         = 0x0000;
+static const uint32_t MPEGTS_PAT_INTERVAL        = 20;
 
 MpegTsMuxer::MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid,  MuxType lType) {
     mPmtPid = lPmtPid;
@@ -350,16 +351,14 @@ uint8_t MpegTsMuxer::getCc(uint32_t lWithPid) {
 
 bool MpegTsMuxer::shouldCreatePat() {
     bool lRet = false;
-    static const int lPatInterval = 20;
-    static int lCurrentIndex = 0;
-    if (lCurrentIndex % lPatInterval == 0) {
-        if (lCurrentIndex > 0) {
-            lCurrentIndex = 0;
+    if (mCurrentIndex % MPEGTS_PAT_INTERVAL == 0) {
+        if (mCurrentIndex > 0) {
+            mCurrentIndex = 0;
         }
         lRet = true;
     }
 
-    lCurrentIndex++;
+    mCurrentIndex++;
 
     return lRet;
 }
