@@ -28,7 +28,6 @@ add_library(mpegts ${libfiles})
 
 
 set_target_properties(mpegts PROPERTIES PUBLIC_HEADER "mpegts/mpegts_demuxer.h;mpegts/mpegts_muxer.h;mpegts/simple_buffer.h;mpegts/ts_packet.h")
-set_target_properties(mpegts PROPERTIES POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS})
 
 add_executable(mpeg_ts_dmx_tests ${CMAKE_CURRENT_SOURCE_DIR}/main_dmx.cpp)
 target_link_libraries(mpeg_ts_dmx_tests mpegts Threads::Threads)
