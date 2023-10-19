@@ -45,7 +45,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
         }
 
         // found pmt
-        if (mEsFrames.empty() && mPmtId != 0 && lTsHeader.mPid == mPmtId) {
+        if (mPmtId != 0 && lTsHeader.mPid == mPmtId) {
             if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
                 AdaptationFieldHeader lAdaptionField;
@@ -56,17 +56,23 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
             if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
                 uint8_t lPointField = rIn.read1Byte();
 
-                mPmtHeader.decode(rIn);
-                mPcrId = mPmtHeader.mPcrPid;
-                for (size_t lI = 0; lI < mPmtHeader.mInfos.size(); lI++) {
-                    mEsFrames[mPmtHeader.mInfos[lI]->mElementaryPid] = std::shared_ptr<EsFrame>(
-                            new EsFrame(mPmtHeader.mInfos[lI]->mStreamType));
-                    mStreamPidMap[mPmtHeader.mInfos[lI]->mStreamType] = mPmtHeader.mInfos[lI]->mElementaryPid;
-                }
-                mPmtIsValid = true;
+                PMTHeader pmtHeader;
+                pmtHeader.decode(rIn);
+                if (pmtHeader != mPmtHeader) {
+                    mPmtHeader = pmtHeader;
+                    mPcrId = mPmtHeader.mPcrPid;
+                    for (size_t lI = 0; lI < mPmtHeader.mInfos.size(); lI++) {
+                        if (mEsFrames.find(mPmtHeader.mInfos[lI]->mElementaryPid) == mEsFrames.end()) {
+                            mEsFrames[mPmtHeader.mInfos[lI]->mElementaryPid] =
+                                std::shared_ptr<EsFrame>(new EsFrame(mPmtHeader.mInfos[lI]->mStreamType));
+                        }
+                        mStreamPidMap[mPmtHeader.mInfos[lI]->mStreamType] = mPmtHeader.mInfos[lI]->mElementaryPid;
+                    }
+                    mPmtIsValid = true;
 #ifdef DEBUG
-                mPmtHeader.print();
+                    mPmtHeader.print();
 #endif
+                }
             }
         }
 
@@ -103,7 +109,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                     if (mEsFrames[lTsHeader.mPid]->mCompleted) {
                         mEsFrames[lTsHeader.mPid]->reset();
                     } else if (mEsFrames[lTsHeader.mPid]->mData->size() && !mEsFrames[lTsHeader.mPid]->mCompleted) {
-                        //Its a broken frame deliver that as broken
+                        // It's a broken frame, deliver that as broken
                         if (esOutCallback) {
                             EsFrame *lEsFrame = mEsFrames[lTsHeader.mPid].get();
                             lEsFrame -> mBroken = true;

@@ -203,6 +203,33 @@ PMTHeader::~PMTHeader() {
 
 }
 
+bool PMTHeader::operator==(const PMTHeader& other) {
+    if (mTableId != other.mTableId ||
+        mInfos.size() != other.mInfos.size() ||
+        mSectionSyntaxIndicator != other.mSectionSyntaxIndicator ||
+        mB0 != other.mB0 ||
+        mReserved0 != other.mReserved0 ||
+        mSectionLength != other.mSectionLength ||
+        mProgramNumber != other.mProgramNumber ||
+        mReserved1 != other.mReserved1 ||
+        mVersionNumber != other.mVersionNumber ||
+        mCurrentNextIndicator != other.mCurrentNextIndicator ||
+        mSectionNumber != other.mSectionNumber ||
+        mLastSectionNumber != other.mLastSectionNumber ||
+        mReserved2 != other.mReserved2 ||
+        mPcrPid != other.mPcrPid ||
+        mReserved3 != other.mReserved3 ||
+        mProgramInfoLength != other.mProgramInfoLength) {
+        return false;
+    }
+
+    return true;
+}
+
+bool PMTHeader::operator!=(const PMTHeader& other) {
+    return !operator==(other);
+}
+
 void PMTHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mTableId);
 

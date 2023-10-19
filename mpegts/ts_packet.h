@@ -114,6 +114,9 @@ public:
 
     virtual ~PMTHeader();
 
+    bool operator==(const PMTHeader& other);
+    bool operator!=(const PMTHeader& other);
+
     void encode(SimpleBuffer &rSb);
 
     void decode(SimpleBuffer &rSb);
