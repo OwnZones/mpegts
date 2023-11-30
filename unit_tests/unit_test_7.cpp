@@ -10,7 +10,7 @@
 void UnitTest7::dmxOutputPcr(uint64_t lPcr) {
 }
 
-void UnitTest7::dmxOutput(EsFrame *pEs){
+void UnitTest7::dmxOutput(const EsFrame *pEs){
     mFrameCounter ++;
     mUnitTestStatus = true;
 }

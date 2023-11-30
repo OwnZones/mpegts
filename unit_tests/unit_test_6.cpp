@@ -37,7 +37,7 @@ void UnitTest6::dmxOutputPcr(uint64_t lPcr) {
     }
 }
 
-void UnitTest6::dmxOutputPtsDts(EsFrame *pEs) {
+void UnitTest6::dmxOutputPtsDts(const EsFrame *pEs) {
     if (mPts != pEs->mPts) {
         std::cout << "PTS mismatch." << std::endl;
         mUnitTestStatus = false;
@@ -60,7 +60,7 @@ void UnitTest6::dmxOutputPtsDts(EsFrame *pEs) {
     mFrameInTransit = false;
 }
 
-void UnitTest6::dmxOutputPts(EsFrame *pEs){
+void UnitTest6::dmxOutputPts(const EsFrame *pEs){
 
     if (mPts != pEs->mPts) {
         std::cout << "PTS missmatch." << std::endl;

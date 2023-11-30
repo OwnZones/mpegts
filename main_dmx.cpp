@@ -15,7 +15,7 @@ MpegTsDemuxer gDemuxer;
 int aFrameCounter = {1};
 int vFrameCounter = {1};
 
-void dmxOutput(EsFrame *pEs) {
+void dmxOutput(const EsFrame *pEs) {
 
         if (pEs->mStreamType == TYPE_AUDIO) {
             std::cout << " AAC Frame, PID: " << unsigned(pEs->mPid) << " PTS:" << unsigned(pEs->mPts) << std::endl;
