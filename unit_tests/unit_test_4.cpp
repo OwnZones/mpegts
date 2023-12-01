@@ -36,7 +36,7 @@
 //Test Vector size
 #define TEST_VECTOR_SIZE 4000
 
-void UnitTest4::dmxOutput(EsFrame *pEs){
+void UnitTest4::dmxOutput(const EsFrame *pEs){
 
     //Is the frame correctly marked as mRandomAccess
     if ((mFrameCounter%10)?0:1 != pEs->mRandomAccess) {

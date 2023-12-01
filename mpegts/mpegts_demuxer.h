@@ -23,7 +23,7 @@ public:
 
     uint8_t decode(SimpleBuffer &rIn);
 
-    std::function<void(EsFrame *pEs)> esOutCallback = nullptr;
+    std::function<void(const EsFrame *pEs)> esOutCallback = nullptr;
     std::function<void(uint64_t lPcr)> pcrOutCallback = nullptr;
 
     // stream, pid

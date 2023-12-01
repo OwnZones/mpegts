@@ -72,7 +72,7 @@ uint8_t tsPacket2[TS_PACKET_SIZE] =
 
 #include "unit_test_5.h"
 
-void UnitTest5::dmxOutput(EsFrame *pEs){
+void UnitTest5::dmxOutput(const EsFrame *pEs){
 
     if (mPacketLength != pEs->mData->size()) {
         std::cout << "Content length mismatch. Expected:" << unsigned(mPacketLength) << " bytes" << std::endl;
