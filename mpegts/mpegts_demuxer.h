@@ -25,6 +25,7 @@ public:
 
     std::function<void(const EsFrame *pEs)> esOutCallback = nullptr;
     std::function<void(uint64_t lPcr)> pcrOutCallback = nullptr;
+    std::function<void(const std::string&)> streamInfoCallback = nullptr;
 
     // stream, pid
     std::map<uint8_t, int> mStreamPidMap;
