@@ -38,9 +38,10 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                 rIn.read2Bytes();
                 mPmtId = rIn.read2Bytes() & 0x1fff;
                 mPatIsValid = true;
-#ifdef DEBUG
-                mPatHeader.print();
-#endif
+
+                if (streamInfoCallback != nullptr) {
+                    mPatHeader.print(streamInfoCallback);
+                }
             }
         }
 
@@ -64,9 +65,10 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                     mStreamPidMap[mPmtHeader.mInfos[lI]->mStreamType] = mPmtHeader.mInfos[lI]->mElementaryPid;
                 }
                 mPmtIsValid = true;
-#ifdef DEBUG
-                mPmtHeader.print();
-#endif
+
+                if (streamInfoCallback != nullptr) {
+                    mPmtHeader.print(streamInfoCallback);
+                }
             }
         }
 

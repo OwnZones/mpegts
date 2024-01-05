@@ -7,6 +7,7 @@
 // l local scope
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <vector>
 #include <string>
@@ -69,7 +70,7 @@ public:
 
     void decode(SimpleBuffer &rSb);
 
-    void print();
+    void print(const std::function<void(const std::string&)>& streamInfoCallback);
 
     uint8_t mTableId;                       // 8 bits
     uint8_t mSectionSyntaxIndicator;       // 1 bit
@@ -98,7 +99,7 @@ public:
 
     uint16_t size();
 
-    void print();
+    void print(const std::function<void(const std::string&)>& streamInfoCallback);
 
     uint8_t mStreamType;                    // 8 bits
     uint8_t mReserved0;                      // 3 bits
@@ -120,7 +121,7 @@ public:
 
     uint16_t size();
 
-    void print();
+    void print(const std::function<void(const std::string&)>& streamInfoCallback);
 
     uint8_t mTableId;                       // 8 bits
     uint8_t mSectionSyntaxIndicator;       // 1 bit
