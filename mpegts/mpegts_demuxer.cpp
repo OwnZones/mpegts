@@ -59,10 +59,10 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
 
                 mPmtHeader.decode(rIn);
                 mPcrId = mPmtHeader.mPcrPid;
-                for (size_t lI = 0; lI < mPmtHeader.mInfos.size(); lI++) {
-                    mEsFrames[mPmtHeader.mInfos[lI]->mElementaryPid] = std::shared_ptr<EsFrame>(
-                            new EsFrame(mPmtHeader.mInfos[lI]->mStreamType));
-                    mStreamPidMap[mPmtHeader.mInfos[lI]->mStreamType] = mPmtHeader.mInfos[lI]->mElementaryPid;
+                for (const auto & mInfo : mPmtHeader.mInfos) {
+                    mEsFrames[mInfo->mElementaryPid] = std::make_shared<EsFrame>(mInfo->mStreamType, mInfo->mElementaryPid);
+
+                    mStreamPidMap[mInfo->mStreamType] = mInfo->mElementaryPid;
                 }
                 mPmtIsValid = true;
 
@@ -97,58 +97,62 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
 
             if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadOnly ||
                 lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
-                PESHeader lPesHeader;
+
+                EsFrame* lEsFrame = mEsFrames[lTsHeader.mPid].get();
                 if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
+                    // TODO: Transport streams with no PES packet size set on video streams will not output the very
+                    // last frame, since there will be no final packet with mPayloadUnitStartIndicator set. Add a flush
+                    // function to the demuxer API that the user can call once it has ran out of input data.
 
-                    mEsFrames[lTsHeader.mPid]->mRandomAccess = lRandomAccessIndicator;
-
-                    if (mEsFrames[lTsHeader.mPid]->mCompleted) {
-                        mEsFrames[lTsHeader.mPid]->reset();
-                    } else if (mEsFrames[lTsHeader.mPid]->mData->size() && !mEsFrames[lTsHeader.mPid]->mCompleted) {
-                        //Its a broken frame deliver that as broken
+                    if (!lEsFrame->mData->empty()) {
+                        // We have an old packet with data, flush and reset it before starting a new one
                         if (esOutCallback) {
-                            EsFrame *lEsFrame = mEsFrames[lTsHeader.mPid].get();
-                            lEsFrame -> mBroken = true;
-                            lEsFrame -> mPid = lTsHeader.mPid;
+                            if (lEsFrame->mExpectedPesPacketLength == 0) {
+                                lEsFrame->mCompleted = true;
+                            } else {
+                                // Expected length is set, but we didn't get enough data, deliver what we have as broken
+                                lEsFrame->mBroken = true;
+                            }
                             esOutCallback(lEsFrame);
                         }
-
-                        mEsFrames[lTsHeader.mPid]->reset();
+                        lEsFrame->reset();
                     }
 
+                    // Potential old package has been flushed, set random access indicator and start new package
+                    lEsFrame->mRandomAccess = lRandomAccessIndicator;
+
+                    PESHeader lPesHeader;
                     lPesHeader.decode(rIn);
-                    mEsFrames[lTsHeader.mPid]->mStreamId = lPesHeader.mStreamId;
-                    mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength = lPesHeader.mPesPacketLength;
+                    lEsFrame->mStreamId = lPesHeader.mStreamId;
+                    lEsFrame->mExpectedPesPacketLength = lPesHeader.mPesPacketLength;
                     if (lPesHeader.mPtsDtsFlags == 0x02) {
-                        mEsFrames[lTsHeader.mPid]->mPts = mEsFrames[lTsHeader.mPid]->mDts = readPts(rIn);
+                        lEsFrame->mPts = lEsFrame->mDts = readPts(rIn);
                     } else if (lPesHeader.mPtsDtsFlags == 0x03) {
-                        mEsFrames[lTsHeader.mPid]->mPts = readPts(rIn);
-                        mEsFrames[lTsHeader.mPid]->mDts = readPts(rIn);
+                        lEsFrame->mPts = readPts(rIn);
+                        lEsFrame->mDts = readPts(rIn);
                     }
                     if (lPesHeader.mPesPacketLength != 0) {
 
                         int payloadLength = lPesHeader.mPesPacketLength - 3 -
                                             lPesHeader.mHeaderDataLength;
 
-                        mEsFrames[lTsHeader.mPid]->mExpectedPayloadLength = payloadLength;
+                        lEsFrame->mExpectedPayloadLength = payloadLength;
 
                         if (payloadLength + rIn.pos() > 188 || payloadLength < 0) {
-                            mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(),
-                                                                     188 - (rIn.pos() - lPos));
+                            lEsFrame->mData->append(rIn.data() + rIn.pos(),
+                                                    188 - (rIn.pos() - lPos));
                         } else {
-                            mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(),
-                                                                     lPesHeader.mPesPacketLength - 3 -
-                                                                     lPesHeader.mHeaderDataLength);
+                            lEsFrame->mData->append(rIn.data() + rIn.pos(),
+                                                    lPesHeader.mPesPacketLength - 3 -
+                                                    lPesHeader.mHeaderDataLength);
                         }
 
-                        if(mEsFrames[lTsHeader.mPid]->mData->size() == payloadLength) {
-                            mEsFrames[lTsHeader.mPid]->mCompleted = true;
-                            mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
-                            EsFrame *lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                        if (lEsFrame->mData->size() == payloadLength) {
                             if (esOutCallback) {
+                                lEsFrame->mCompleted = true;
                                 esOutCallback(lEsFrame);
                             }
-                            mEsFrames[lTsHeader.mPid]->reset();
+                            lEsFrame->reset();
                         }
 
                         rIn.skip(188 - (rIn.pos() - lPos));
@@ -156,26 +160,24 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                     }
                 }
 
-                if (mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength != 0 &&
-                    mEsFrames[lTsHeader.mPid]->mData->size() + 188 - (rIn.pos() - lPos) >
-                    mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength) {
+                if (lEsFrame->mExpectedPesPacketLength != 0 &&
+                    lEsFrame->mData->size() + 188 - (rIn.pos() - lPos) >
+                    lEsFrame->mExpectedPesPacketLength) {
 
                     uint8_t *dataPosition = rIn.data() + rIn.pos();
-                    int size = mEsFrames[lTsHeader.mPid]->mExpectedPesPacketLength - mEsFrames[lTsHeader.mPid]->mData->size();
-                    mEsFrames[lTsHeader.mPid]->mData->append(dataPosition,size);
+                    int size = lEsFrame->mExpectedPesPacketLength - lEsFrame->mData->size();
+                    lEsFrame->mData->append(dataPosition,size);
                 } else {
-                    mEsFrames[lTsHeader.mPid]->mData->append(rIn.data() + rIn.pos(), 188 - (rIn.pos() - lPos));
+                    lEsFrame->mData->append(rIn.data() + rIn.pos(), 188 - (rIn.pos() - lPos));
                 }
 
                 //Enough data to deliver?
-                if (mEsFrames[lTsHeader.mPid]->mExpectedPayloadLength == mEsFrames[lTsHeader.mPid]->mData->size()) {
-                    mEsFrames[lTsHeader.mPid]->mCompleted = true;
-                    mEsFrames[lTsHeader.mPid]->mPid = lTsHeader.mPid;
-                    EsFrame *lEsFrame = mEsFrames[lTsHeader.mPid].get();
+                if (lEsFrame->mExpectedPayloadLength == lEsFrame->mData->size()) {
                     if (esOutCallback) {
+                        lEsFrame->mCompleted = true;
                         esOutCallback(lEsFrame);
                     }
-                    mEsFrames[lTsHeader.mPid]->reset();
+                    lEsFrame->reset();
                 }
 
             }

@@ -8,8 +8,8 @@ EsFrame::EsFrame()
     mData.reset(new SimpleBuffer);
 }
 
-EsFrame::EsFrame(uint8_t lSt)
-        : mStreamType(lSt), mPid(0), mExpectedPesPacketLength(0), mExpectedPayloadLength(0), mCompleted(false), mBroken(false) {
+EsFrame::EsFrame(uint8_t streamType, uint16_t pid)
+        : mStreamType(streamType), mPid(pid), mExpectedPesPacketLength(0), mExpectedPayloadLength(0), mCompleted(false), mBroken(false) {
     mData.reset(new SimpleBuffer);
 }
 
@@ -18,7 +18,6 @@ bool EsFrame::empty() {
 }
 
 void EsFrame::reset() {
-    mPid = 0;
     mCompleted = false;
     mBroken = false;
     mExpectedPesPacketLength = 0;
