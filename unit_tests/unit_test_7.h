@@ -13,7 +13,7 @@ class UnitTest7 {
 public:
     bool runTest();
 private:
-    void dmxOutput(const EsFrame *pEs);
+    void dmxOutput(const EsFrame &esFrame);
     void dmxOutputPcr(uint64_t lPcr);
 
     MpegTsDemuxer mDemuxer;

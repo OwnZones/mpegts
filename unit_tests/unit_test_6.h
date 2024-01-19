@@ -14,8 +14,8 @@ public:
     bool runTest();
 private:
     void muxOutput(SimpleBuffer &rTsOutBuffer);
-    void dmxOutputPts(const EsFrame *pEs);
-    void dmxOutputPtsDts(const EsFrame *pEs);
+    void dmxOutputPts(const EsFrame &esFrame);
+    void dmxOutputPtsDts(const EsFrame &esFrame);
     void dmxOutputPcr(uint64_t lPcr);
 
     MpegTsDemuxer mDemuxer;

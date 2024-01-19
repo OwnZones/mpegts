@@ -34,22 +34,22 @@
 //Test Vector size
 #define TEST_VECTOR_SIZE 4000
 
-void UnitTest1::dmxOutput(const EsFrame *pEs){
+void UnitTest1::dmxOutput(const EsFrame& esFrame) {
 
     //Is the frame correctly marked as mRandomAccess
-    if ((mFrameCounter%10)?0:1 != pEs->mRandomAccess) {
-        std::cout << "mRandomAccess indication error: " << unsigned(pEs->mRandomAccess) << " Frame -> " << unsigned(mFrameCounter) << std::endl;
+    if ((mFrameCounter%10)?0: 1 != esFrame.mRandomAccess) {
+        std::cout << "mRandomAccess indication error: " << unsigned(esFrame.mRandomAccess) << " Frame -> " << unsigned(mFrameCounter) << std::endl;
         mUnitTestStatus = false;
     }
 
     //verify expected size
-    if (pEs->mData->size() != mFrameCounter ) {
-        std::cout << "Frame size missmatch " << unsigned(pEs->mData->size()) << std::endl;
+    if (esFrame.mData->size() != mFrameCounter ) {
+        std::cout << "Frame size missmatch " << unsigned(esFrame.mData->size()) << std::endl;
         mUnitTestStatus = false;
     }
 
     //Make sure PTS and DTS are set as expected
-    if (pEs->mPts != mFrameCounter ||  pEs->mDts != mFrameCounter) {
+    if (esFrame.mPts != mFrameCounter || esFrame.mDts != mFrameCounter) {
         std::cout << "PTS - DTS" << std::endl;
         mUnitTestStatus = false;
     }
@@ -57,9 +57,9 @@ void UnitTest1::dmxOutput(const EsFrame *pEs){
     uint8_t referenceVector = 0;
     //verify expected vector
     for (int lI = 0 ; lI < mFrameCounter ; lI++) {
-        if (pEs->mData->data()[lI] != referenceVector++ ) {
+        if (esFrame.mData->data()[lI] != referenceVector++ ) {
             std::cout << "Content missmatch for packet size -> " << unsigned(mFrameCounter) << " at byte: " << unsigned(lI);
-            std::cout << " Expected " << unsigned(referenceVector -1 ) << " got " << (uint8_t)pEs->mData->data()[lI] + 0 << std::endl;
+            std::cout << " Expected " << unsigned(referenceVector -1 ) << " got " << (uint8_t)esFrame.mData->data()[lI] + 0 << std::endl;
             mUnitTestStatus = false;
         }
     }

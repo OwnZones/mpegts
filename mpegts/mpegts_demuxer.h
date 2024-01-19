@@ -23,7 +23,7 @@ public:
 
     uint8_t decode(SimpleBuffer &rIn);
 
-    std::function<void(const EsFrame *pEs)> esOutCallback = nullptr;
+    std::function<void(const EsFrame& pEs)> esOutCallback = nullptr;
     std::function<void(uint64_t lPcr)> pcrOutCallback = nullptr;
     std::function<void(const std::string&)> streamInfoCallback = nullptr;
 
@@ -41,7 +41,7 @@ public:
 
 private:
     // pid, Elementary data frame
-    std::map<int, std::shared_ptr<EsFrame>> mEsFrames;
+    std::map<int, EsFrame> mEsFrames;
     int mPcrId;
     SimpleBuffer mRestData;
 };

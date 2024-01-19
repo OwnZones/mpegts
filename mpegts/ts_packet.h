@@ -18,7 +18,7 @@ class EsFrame {
 public:
     EsFrame();
 
-    EsFrame(uint8_t lSt);
+    EsFrame(uint8_t streamType, uint16_t pid);
 
     virtual ~EsFrame() {};
 

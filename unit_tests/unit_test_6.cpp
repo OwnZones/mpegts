@@ -37,13 +37,13 @@ void UnitTest6::dmxOutputPcr(uint64_t lPcr) {
     }
 }
 
-void UnitTest6::dmxOutputPtsDts(const EsFrame *pEs) {
-    if (mPts != pEs->mPts) {
+void UnitTest6::dmxOutputPtsDts(const EsFrame &esFrame) {
+    if (mPts != esFrame.mPts) {
         std::cout << "PTS mismatch." << std::endl;
         mUnitTestStatus = false;
     }
 
-    if (mDts != pEs->mDts) {
+    if (mDts != esFrame.mDts) {
         std::cout << "DTS mismatch." << std::endl;
         mUnitTestStatus = false;
     }
@@ -51,7 +51,7 @@ void UnitTest6::dmxOutputPtsDts(const EsFrame *pEs) {
     uint8_t referenceVector = 0;
     //verify expected vector
     for (int lI = 0 ; lI < TEST_VECTOR_SIZE ; lI++) {
-        if (pEs->mData->data()[lI] != referenceVector++ ) {
+        if (esFrame.mData->data()[lI] != referenceVector++ ) {
             std::cout << "Content missmatch." << std::endl;
             mUnitTestStatus = false;
         }
@@ -60,16 +60,16 @@ void UnitTest6::dmxOutputPtsDts(const EsFrame *pEs) {
     mFrameInTransit = false;
 }
 
-void UnitTest6::dmxOutputPts(const EsFrame *pEs){
+void UnitTest6::dmxOutputPts(const EsFrame &esFrame){
 
-    if (mPts != pEs->mPts) {
+    if (mPts != esFrame.mPts) {
         std::cout << "PTS missmatch." << std::endl;
     }
 
     uint8_t referenceVector = 0;
     //verify expected vector
     for (int lI = 0 ; lI < TEST_VECTOR_SIZE ; lI++) {
-        if (pEs->mData->data()[lI] != referenceVector++ ) {
+        if (esFrame.mData->data()[lI] != referenceVector++ ) {
             std::cout << "Content missmatch." << std::endl;
             mUnitTestStatus = false;
         }
