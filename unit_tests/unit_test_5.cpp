@@ -72,17 +72,17 @@ uint8_t tsPacket2[TS_PACKET_SIZE] =
 
 #include "unit_test_5.h"
 
-void UnitTest5::dmxOutput(const EsFrame *pEs){
+void UnitTest5::dmxOutput(const EsFrame &esFrame){
 
-    if (mPacketLength != pEs->mData->size()) {
+    if (mPacketLength != esFrame.mData->size()) {
         std::cout << "Content length mismatch. Expected:" << unsigned(mPacketLength) << " bytes" << std::endl;
     }
 
     uint8_t referenceVector = 0;
     //verify expected vector
-    for (int lI = 0 ; lI < pEs->mData->size() ; lI++) {
-        if (pEs->mData->data()[lI] != referenceVector++ ) {
-            std::cout << "Content mismatch. Expected:" << unsigned(lI) << " Got: " << (uint8_t)pEs->mData->data()[lI] + 0 << std::endl;
+    for (int lI = 0 ; lI < esFrame.mData->size() ; lI++) {
+        if (esFrame.mData->data()[lI] != referenceVector++ ) {
+            std::cout << "Content mismatch. Expected:" << unsigned(lI) << " Got: " << (uint8_t)esFrame.mData->data()[lI] + 0 << std::endl;
             mUnitTestStatus = false;
         }
     }
