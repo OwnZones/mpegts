@@ -14,7 +14,7 @@
 #define SAVE_TO_FILE
 #ifdef SAVE_TO_FILE
 #define SAVED_TS_NUM_SECONDS 25
-std::ofstream oMpegTs("../output.ts", std::ofstream::binary | std::ofstream::out);
+std::ofstream oMpegTs("output.ts", std::ofstream::binary | std::ofstream::out);
 int savedOutputSeconds = {0};
 bool savingFrames = {true};
 bool closeOnce = {false};
@@ -110,7 +110,7 @@ void fakeAudioEncoder() {
 
             std::string aFilename;
             std::ostringstream aFilenameBld;
-            aFilenameBld << "../bars_dmx/af" << lFrameCounter+1 << ".adts";
+            aFilenameBld << "bars_dmx/af" << lFrameCounter+1 << ".adts";
             aFilename = aFilenameBld.str();
             //std::cout << " Filename: " << aFilename  << std::endl;
 
@@ -179,13 +179,13 @@ void fakeVideoEncoder() {
 
             std::string vFilename;
             std::ostringstream vFilenameBld;
-            vFilenameBld << "../bars_dmx/vf" << lFrameCounter+1 << ".h264";
+            vFilenameBld << "bars_dmx/vf" << lFrameCounter+1 << ".h264";
             vFilename = vFilenameBld.str();
             //std::cout << " Filename: " << vFilename  << std::endl;
 
             std::string ptsDtsFilename;
             std::ostringstream ptsDtsFilenameBld;
-            ptsDtsFilenameBld << "../bars_dmx/ptsdts" << lFrameCounter+1 << ".txt";
+            ptsDtsFilenameBld << "bars_dmx/ptsdts" << lFrameCounter+1 << ".txt";
             ptsDtsFilename = ptsDtsFilenameBld.str();
 
             std::ifstream thisPtsFile(ptsDtsFilename);
@@ -262,10 +262,10 @@ int main(int argc, char *argv[]) {
 
     std::string lStartPTS;
     std::string lEndPTS;
-    std::ifstream startPtsFile("../bars_dmx/ptsdts1.txt");
+    std::ifstream startPtsFile("bars_dmx/ptsdts1.txt");
     std::getline(startPtsFile, lStartPTS);
     startPtsFile.close();
-    std::ifstream endPtsFile("../bars_dmx/ptsdts1201.txt");
+    std::ifstream endPtsFile("bars_dmx/ptsdts1201.txt");
     std::getline(endPtsFile, lEndPTS);
     endPtsFile.close();
     std::stringstream frst(lStartPTS);

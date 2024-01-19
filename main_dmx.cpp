@@ -44,7 +44,7 @@ void dmxOutput(const EsFrame &esFrame) {
 
                 std::string aFilename;
                 std::ostringstream aFilenameBld;
-                aFilenameBld << "../bars_dmx/af" << aFrameCounter++ << ".adts";
+                aFilenameBld << "bars_dmx/af" << aFrameCounter++ << ".adts";
                 aFilename = aFilenameBld.str();
                 std::cout << " Filename: " << aFilename  << std::endl;
                 std::ofstream oAFile(aFilename, std::ofstream::binary | std::ofstream::out);
@@ -57,7 +57,7 @@ void dmxOutput(const EsFrame &esFrame) {
 
             std::string vFilename;
             std::ostringstream vFilenameBld;
-            vFilenameBld << "../bars_dmx/vf" << vFrameCounter << ".h264";
+            vFilenameBld << "bars_dmx/vf" << vFrameCounter << ".h264";
             vFilename = vFilenameBld.str();
             std::cout << " Filename: " << vFilename  << std::endl;
             std::ofstream oVFile(vFilename, std::ofstream::binary | std::ofstream::out);
@@ -66,7 +66,7 @@ void dmxOutput(const EsFrame &esFrame) {
 
             std::string ptsDtsFilename;
             std::ostringstream ptsDtsFilenameBld;
-            ptsDtsFilenameBld << "../bars_dmx/ptsdts" << vFrameCounter++ << ".txt";
+            ptsDtsFilenameBld << "bars_dmx/ptsdts" << vFrameCounter++ << ".txt";
             ptsDtsFilename = ptsDtsFilenameBld.str();
             std::cout << " Filename: " << ptsDtsFilename  << std::endl;
             std::ofstream oPtsDtsFile(ptsDtsFilename);
@@ -87,7 +87,7 @@ void dmxOutput(const EsFrame &esFrame) {
 int main(int argc, char *argv[]) {
     std::cout << "TS - demuxlib test " << std::endl;
     gDemuxer.esOutCallback = std::bind(&dmxOutput, std::placeholders::_1);
-    std::ifstream ifile("../bars.ts", std::ios::binary | std::ios::in);
+    std::ifstream ifile("bars.ts", std::ios::binary | std::ios::in);
     uint8_t packet[188] = {0};
     SimpleBuffer in;
 

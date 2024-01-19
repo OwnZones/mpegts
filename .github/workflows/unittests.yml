@@ -14,11 +14,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: get the ts test file
-      run: wget https://github.com/andersc/assets/raw/master/bars.ts
-    - name: build and run
+      run: |
+        wget https://github.com/andersc/assets/raw/master/bars.ts
+    - name: build unit tests
       run: |
         mkdir build
         cd build
         cmake -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . --config Release --target mpeg_ts_unit_tests
-        ./mpeg_ts_unit_tests 
+    - name: run unit tests
+      run: |
+        build/mpeg_ts_unit_tests 

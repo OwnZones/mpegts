@@ -24,7 +24,7 @@ bool UnitTest7::runTest() {
     mDemuxer.esOutCallback = std::bind(&UnitTest7::dmxOutput, this, std::placeholders::_1);
     mDemuxer.pcrOutCallback = std::bind(&UnitTest7::dmxOutputPcr, this, std::placeholders::_1);
 
-    std::ifstream lFile("../bars.ts", std::ios::binary | std::ios::in);
+    std::ifstream lFile("bars.ts", std::ios::binary | std::ios::in);
     uint8_t lPacket[300] = {0};
     SimpleBuffer lIn;
 
