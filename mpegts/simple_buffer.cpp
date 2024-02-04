@@ -58,6 +58,12 @@ void SimpleBuffer::write8Bytes(int64_t val)
     }
 }
 
+void SimpleBuffer::writeString(std::string str){
+   for (char c : str) {
+        mData.push_back(static_cast<uint8_t>(c));
+    }
+}
+
 void SimpleBuffer::append(const uint8_t* bytes, int size)
 {
     if (!bytes || size <= 0) {

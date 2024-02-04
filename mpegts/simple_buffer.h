@@ -20,6 +20,7 @@ public:
     void write3Bytes(int32_t val);
     void write4Bytes(int32_t val);
     void write8Bytes(int64_t val);
+    void writeString(std::string str);
     void append(const uint8_t* bytes, int size);
     void prepend(const uint8_t* bytes, int size);
 
