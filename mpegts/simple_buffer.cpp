@@ -155,10 +155,9 @@ int64_t SimpleBuffer::read8Bytes()
 std::string SimpleBuffer::readString(int len)
 {
     assert(require(len));
-
-    std::string val(*(char*)&mData[0] + mPos, len);
+    std::vector<uint8_t> subData(mData.begin() + mPos, mData.begin() + mPos + len);
+    std::string val(subData.begin(), subData.end());
     mPos += len;
-
     return val;
 }
 
