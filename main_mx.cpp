@@ -253,10 +253,10 @@ void fakeVideoEncoder() {
 int main(int argc, char *argv[]) {
     std::cout << "TS - muxlib test " << std::endl;
 
-    std::map<uint8_t, int> gStreamPidMap;
-    gStreamPidMap[TYPE_AUDIO] = AUDIO_PID;
-    gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
-    gpMuxer = new MpegTsMuxer(gStreamPidMap, PMT_PID, VIDEO_PID, MpegTsMuxer::MuxType::h222Type);
+    std::vector<std::shared_ptr<PMTElementInfo>> gEsStreamInfo;
+    gEsStreamInfo.push_back(std::shared_ptr<PMTElementInfo>(new PMTElementInfo(TYPE_AUDIO, AUDIO_PID)));
+    gEsStreamInfo.push_back(std::shared_ptr<PMTElementInfo>(new PMTElementInfo(TYPE_VIDEO, VIDEO_PID)));
+    gpMuxer = new MpegTsMuxer(gEsStreamInfo, PMT_PID, VIDEO_PID, MpegTsMuxer::MuxType::h222Type);
 
     gpMuxer->tsOutCallback = std::bind(&muxOutput, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 

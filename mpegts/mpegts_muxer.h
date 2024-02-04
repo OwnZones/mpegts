@@ -22,13 +22,13 @@ public:
         dvbType //Not implemented at all
     };
 
-    MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid, MuxType lType);
+    MpegTsMuxer(std::vector<std::shared_ptr<PMTElementInfo>> lEsStreamInfo, uint16_t lPmtPid, uint16_t lPcrPid, MuxType lType);
 
     virtual ~MpegTsMuxer();
 
     void createPat(SimpleBuffer &rSb, uint16_t lPmtPid, uint8_t lCc);
 
-    void createPmt(SimpleBuffer &rSb, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint8_t lCc);
+    void createPmt(SimpleBuffer &rSb, std::vector<std::shared_ptr<PMTElementInfo>> lEsStreamInfo, uint16_t lPmtPid, uint8_t lCc);
 
     void createPes(EsFrame &rFrame, SimpleBuffer &rSb);
 
@@ -51,7 +51,7 @@ private:
 
     uint16_t mPmtPid = 0;
 
-    std::map<uint8_t, int> mStreamPidMap;
+    std::vector<std::shared_ptr<PMTElementInfo>> mEsStreamInfo;
 
     uint16_t mPcrPid;
 

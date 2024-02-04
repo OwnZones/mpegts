@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(mpegts)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 #Macro for printing all CMake variables
 macro(print_all_variables)
