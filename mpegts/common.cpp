@@ -25,7 +25,7 @@ void writePts(SimpleBuffer &rSb, uint32_t lFb, uint64_t lPts) {
 
 uint64_t readPts(SimpleBuffer &rSb) {
     uint64_t lPts = 0;
-    uint32_t lVal = 0;
+    uint64_t lVal = 0;
     lVal = rSb.read1Byte();
     lPts |= ((lVal >> 1) & 0x07) << 30;
 
