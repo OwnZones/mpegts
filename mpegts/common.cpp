@@ -59,3 +59,40 @@ uint64_t readPcr(SimpleBuffer &rSb) {
 
     return lPcr;
 }
+
+// added for remux
+
+void writePcrFull(SimpleBuffer &rSb, uint64_t lPcr) {
+    // write the full 48 bit PCR
+    rSb.write1Byte((int8_t) (lPcr >> 40));
+    rSb.write1Byte((int8_t) (lPcr >> 32));
+    rSb.write1Byte((int8_t) (lPcr >> 24));
+    rSb.write1Byte((int8_t) (lPcr >> 16));
+    rSb.write1Byte((int8_t) (lPcr >>  8));
+    rSb.write1Byte((int8_t) (lPcr >>  0));
+}
+
+uint64_t readPcrFull(SimpleBuffer &rSb) {
+    uint64_t lPcr = 0;
+    uint64_t lVal;
+    
+    lVal = rSb.read1Byte();
+    lPcr |= (lVal << 40) & 0xFF0000000000;
+
+    lVal = rSb.read1Byte();
+    lPcr |= (lVal << 32) & 0xFF00000000;
+
+    lVal = rSb.read1Byte();
+    lPcr |= (lVal << 24) & 0xFF000000;
+
+    lVal = rSb.read1Byte();
+    lPcr |= (lVal << 16) & 0xFF0000;
+
+    lVal = rSb.read1Byte();
+    lPcr |= ((lVal << 8) & 0xFF00);
+
+    lVal = rSb.read1Byte();
+    lPcr |= ((lVal << 0) & 0x00FF);
+
+    return lPcr;
+}

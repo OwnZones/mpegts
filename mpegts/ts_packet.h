@@ -38,6 +38,14 @@ public:
     uint16_t mExpectedPayloadLength;
     bool mCompleted;
     bool mBroken;
+
+    // added for remux
+    int32_t videoFrameNumber;
+    std::vector<uint32_t> pcrIndexes;
+    std::vector<uint64_t> pcrs;  
+    uint32_t origNumTsPackets;
+    uint32_t numTsPackets;
+    std::shared_ptr<SimpleBuffer> mTSData;
 };
 
 class TsHeader {

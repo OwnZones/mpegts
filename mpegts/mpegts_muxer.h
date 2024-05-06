@@ -22,7 +22,7 @@ public:
         dvbType //Not implemented at all
     };
 
-    MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid, MuxType lType);
+    MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid, MuxType lType, uint8_t initCc=0);
 
     virtual ~MpegTsMuxer();
 
@@ -32,17 +32,26 @@ public:
 
     void createPes(EsFrame &rFrame, SimpleBuffer &rSb);
 
+    // added for remux
+    void createPesRemux(EsFrame &rFrame, SimpleBuffer &rSb);
+
     void createPcr(uint64_t lPcr, uint8_t lTag = 0);
 
     void createNull(uint8_t lTag = 0);
 
     void encode(EsFrame &rFrame, uint8_t lTag = 0, bool lRandomAccess = false);
 
+    // added for remux
+    void encodeRemux(EsFrame &rFrame, uint8_t lTag = 0, bool lRandomAccess = false);
+
     std::function<void(SimpleBuffer &rSb, uint8_t lTag, bool lRandomAccess)> tsOutCallback = nullptr;
 
+    // added for remux
+    void replaceSps(EsFrame& esFrameDst, SimpleBuffer &rSb, SimpleBuffer &rSps);
 
 private:
     uint8_t getCc(uint32_t lWithPid);
+    void initCc(uint32_t lWithPid, uint8_t uCC);
 
     uint32_t mCurrentIndex = 0;
     bool shouldCreatePat();

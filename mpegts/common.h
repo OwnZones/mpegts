@@ -30,3 +30,8 @@ extern uint64_t readPts(SimpleBuffer &rSb);
 
 extern uint64_t readPcr(SimpleBuffer &rSb);
 
+// added for remux
+extern uint64_t readPcrFull(SimpleBuffer &rSb);
+
+extern void writePcrFull(SimpleBuffer &rSb, uint64_t lPcr);
+

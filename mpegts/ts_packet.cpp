@@ -2,15 +2,19 @@
 #include "simple_buffer.h"
 
 #include <iostream>
+#include <cstring>
 
 EsFrame::EsFrame()
-        : mPid(0), mExpectedPesPacketLength(0), mCompleted(false) {
+        : mPid(0), mExpectedPesPacketLength(0), mCompleted(false), pcrIndexes(), pcrs(), numTsPackets(0) {
     mData.reset(new SimpleBuffer);
+    mTSData.reset(new SimpleBuffer);
+    
 }
 
 EsFrame::EsFrame(uint8_t streamType, uint16_t pid)
         : mStreamType(streamType), mPid(pid), mExpectedPesPacketLength(0), mExpectedPayloadLength(0), mCompleted(false), mBroken(false) {
     mData.reset(new SimpleBuffer);
+    mTSData.reset(new SimpleBuffer);
 }
 
 bool EsFrame::empty() {
@@ -23,6 +27,7 @@ void EsFrame::reset() {
     mExpectedPesPacketLength = 0;
     mExpectedPayloadLength = 0;
     mData.reset(new SimpleBuffer);
+    mTSData.reset(new SimpleBuffer);
 }
 
 TsHeader::TsHeader()
