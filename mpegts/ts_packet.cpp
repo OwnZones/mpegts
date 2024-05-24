@@ -3,14 +3,12 @@
 
 #include <iostream>
 
-EsFrame::EsFrame()
-        : mPid(0), mExpectedPesPacketLength(0), mCompleted(false) {
-    mData.reset(new SimpleBuffer);
+EsFrame::EsFrame() {
+    mData = std::make_shared<SimpleBuffer>();
 }
 
-EsFrame::EsFrame(uint8_t streamType, uint16_t pid)
-        : mStreamType(streamType), mPid(pid), mExpectedPesPacketLength(0), mExpectedPayloadLength(0), mCompleted(false), mBroken(false) {
-    mData.reset(new SimpleBuffer);
+EsFrame::EsFrame(uint8_t streamType, uint16_t pid) : mStreamType(streamType), mPid(pid) {
+    mData = std::make_shared<SimpleBuffer>();
 }
 
 bool EsFrame::empty() {
@@ -18,20 +16,20 @@ bool EsFrame::empty() {
 }
 
 void EsFrame::reset() {
-    mCompleted = false;
-    mBroken = false;
+    mPts = 0;
+    mDts = 0;
+    mPcr = 0;
+    mRandomAccess = 0;
     mExpectedPesPacketLength = 0;
     mExpectedPayloadLength = 0;
-    mData.reset(new SimpleBuffer);
+    mCompleted = false;
+    mBroken = false;
+    mData = std::make_shared<SimpleBuffer>();
 }
 
-TsHeader::TsHeader()
-        : mSyncByte(0x47), mTransportErrorIndicator(0), mPayloadUnitStartIndicator(0), mTransportPriority(0), mPid(0),
-          mTransportScramblingControl(0), mAdaptationFieldControl(0), mContinuityCounter(0) {
-}
+TsHeader::TsHeader() = default;
 
-TsHeader::~TsHeader() {
-}
+TsHeader::~TsHeader() = default;
 
 void TsHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mSyncByte);
@@ -63,15 +61,9 @@ void TsHeader::decode(SimpleBuffer &rSb) {
     mTransportScramblingControl = (lB3 >> 6) & 0x03;
 }
 
-PATHeader::PATHeader()
-        : mTableId(0), mSectionSyntaxIndicator(0), mB0(0), mReserved0(0), mSectionLength(0), mTransportStreamId(0),
-          mReserved1(0), mVersionNumber(0), mCurrentNextIndicator(0), mSectionNumber(0), mLastSectionNumber(0) {
+PATHeader::PATHeader() = default;
 
-}
-
-PATHeader::~PATHeader() {
-
-}
+PATHeader::~PATHeader() = default;
 
 void PATHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mTableId);
@@ -129,18 +121,15 @@ void PATHeader::print(const std::function<void(const std::string&)>& streamInfoC
 }
 
 PMTElementInfo::PMTElementInfo(uint8_t lSt, uint16_t lPid)
-        : mStreamType(lSt), mReserved0(0x7), mElementaryPid(lPid), mReserved1(0xf), mEsInfoLength(0) {
+        : mStreamType(lSt), mElementaryPid(lPid) {
 
 }
 
 PMTElementInfo::PMTElementInfo()
         : PMTElementInfo(0, 0) {
-
 }
 
-PMTElementInfo::~PMTElementInfo() {
-
-}
+PMTElementInfo::~PMTElementInfo() = default;
 
 void PMTElementInfo::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mStreamType);
@@ -188,16 +177,9 @@ void PMTElementInfo::print(const std::function<void(const std::string&)>& stream
     streamInfoCallback("ES_info: " + mEsInfo);
 }
 
-PMTHeader::PMTHeader()
-        : mTableId(0x02), mSectionSyntaxIndicator(0), mB0(0), mReserved0(0), mSectionLength(0), mProgramNumber(0),
-          mReserved1(0), mVersionNumber(0), mCurrentNextIndicator(0), mSectionNumber(0), mLastSectionNumber(0),
-          mReserved2(0), mPcrPid(0), mReserved3(0), mProgramInfoLength(0) {
+PMTHeader::PMTHeader() = default;
 
-}
-
-PMTHeader::~PMTHeader() {
-
-}
+PMTHeader::~PMTHeader() = default;
 
 void PMTHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mTableId);
@@ -302,16 +284,9 @@ void PMTHeader::print(const std::function<void(const std::string&)>& streamInfoC
     }
 }
 
-AdaptationFieldHeader::AdaptationFieldHeader()
-        : mAdaptationFieldLength(0), mAdaptationFieldExtensionFlag(0), mTransportPrivateDataFlag(0),
-          mSplicingPointFlag(0), mOpcrFlag(0), mPcrFlag(0), mElementaryStreamPriorityIndicator(0),
-          mRandomAccessIndicator(0), mDiscontinuityIndicator(0) {
+AdaptationFieldHeader::AdaptationFieldHeader() = default;
 
-}
-
-AdaptationFieldHeader::~AdaptationFieldHeader() {
-
-}
+AdaptationFieldHeader::~AdaptationFieldHeader() = default;
 
 void AdaptationFieldHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mAdaptationFieldLength);
@@ -343,17 +318,9 @@ void AdaptationFieldHeader::decode(SimpleBuffer &rSb) {
     }
 }
 
-PESHeader::PESHeader()
-        : mPacketStartCode(0x000001), mStreamId(0), mPesPacketLength(0), mOriginalOrCopy(0), mCopyright(0),
-          mDataAlignmentIndicator(0), mPesPriority(0), mPesScramblingControl(0), mMarkerBits(0x02), mPesExtFlag(0),
-          mPesCrcFlag(0), mAddCopyInfoFlag(0), mDsmTrickModeFlag(0), mEsRateFlag(0), mEscrFlag(0), mPtsDtsFlags(0),
-          mHeaderDataLength(0) {
+PESHeader::PESHeader() = default;
 
-}
-
-PESHeader::~PESHeader() {
-
-}
+PESHeader::~PESHeader() = default;
 
 void PESHeader::encode(SimpleBuffer &rSb) {
     uint32_t lB0b1b2b3 = (mPacketStartCode << 8) & 0xFFFFFF00;
