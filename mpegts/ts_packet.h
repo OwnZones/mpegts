@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "common.h"
+
 class SimpleBuffer;
 
 class EsFrame final {
@@ -70,7 +72,7 @@ public:
 
     void decode(SimpleBuffer& rSb);
 
-    void print(const std::function<void(const std::string&)>& streamInfoCallback);
+    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
 
     uint8_t mTableId = 0;                // 8 bits
     uint8_t mSectionSyntaxIndicator = 0; // 1 bit
@@ -99,7 +101,7 @@ public:
 
     uint16_t size();
 
-    void print(const std::function<void(const std::string&)>& streamInfoCallback);
+    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
 
     uint8_t mStreamType = 0;     // 8 bits
     uint8_t mReserved0 = 0x7;    // 3 bits
@@ -121,7 +123,7 @@ public:
 
     uint16_t size();
 
-    void print(const std::function<void(const std::string&)>& streamInfoCallback);
+    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
 
     uint8_t mTableId = 0x02;             // 8 bits
     uint8_t mSectionSyntaxIndicator = 0; // 1 bit

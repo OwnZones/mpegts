@@ -105,19 +105,20 @@ void PATHeader::decode(SimpleBuffer &rSb) {
     mLastSectionNumber = rSb.read1Byte();
 }
 
-void PATHeader::print(const std::function<void(const std::string&)>& streamInfoCallback) {
-    streamInfoCallback("----------PAT information----------");
-    streamInfoCallback("table_id: " + std::to_string(mTableId));
-    streamInfoCallback("section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
-    streamInfoCallback("b0: " + std::to_string(mB0));
-    streamInfoCallback("reserved0: " + std::to_string(mReserved0));
-    streamInfoCallback("section_length: " + std::to_string(mSectionLength));
-    streamInfoCallback("transport_stream_id: " + std::to_string(mTransportStreamId));
-    streamInfoCallback("reserved1: " + std::to_string(mReserved1));
-    streamInfoCallback("version_number: " + std::to_string(mVersionNumber));
-    streamInfoCallback("current_next_indicator: " + std::to_string(mCurrentNextIndicator));
-    streamInfoCallback("section_number: " + std::to_string(mSectionNumber));
-    streamInfoCallback("last_section_number: " + std::to_string(mLastSectionNumber));
+void PATHeader::print(LogLevel logLevel,
+                      const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) {
+    streamInfoCallback(logLevel, "----------PAT information----------");
+    streamInfoCallback(logLevel, "table_id: " + std::to_string(mTableId));
+    streamInfoCallback(logLevel, "section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
+    streamInfoCallback(logLevel, "b0: " + std::to_string(mB0));
+    streamInfoCallback(logLevel, "reserved0: " + std::to_string(mReserved0));
+    streamInfoCallback(logLevel, "section_length: " + std::to_string(mSectionLength));
+    streamInfoCallback(logLevel, "transport_stream_id: " + std::to_string(mTransportStreamId));
+    streamInfoCallback(logLevel, "reserved1: " + std::to_string(mReserved1));
+    streamInfoCallback(logLevel, "version_number: " + std::to_string(mVersionNumber));
+    streamInfoCallback(logLevel, "current_next_indicator: " + std::to_string(mCurrentNextIndicator));
+    streamInfoCallback(logLevel, "section_number: " + std::to_string(mSectionNumber));
+    streamInfoCallback(logLevel, "last_section_number: " + std::to_string(mLastSectionNumber));
 }
 
 PMTElementInfo::PMTElementInfo(uint8_t lSt, uint16_t lPid)
@@ -167,14 +168,15 @@ uint16_t PMTElementInfo::size() {
     return 5 + mEsInfoLength;
 }
 
-void PMTElementInfo::print(const std::function<void(const std::string&)>& streamInfoCallback) {
-    streamInfoCallback("**********PMTElement information**********");
-    streamInfoCallback("stream_type: " + std::to_string(mStreamType));
-    streamInfoCallback("reserved0: " + std::to_string(mReserved0));
-    streamInfoCallback("elementary_PID: " + std::to_string(mElementaryPid));
-    streamInfoCallback("reserved1: " + std::to_string(mReserved1));
-    streamInfoCallback("ES_info_length: " + std::to_string(mEsInfoLength));
-    streamInfoCallback("ES_info: " + mEsInfo);
+void PMTElementInfo::print(LogLevel logLevel,
+                           const std::function<void(LogLevel logLevel, const std::string&)>& streamInfoCallback) {
+    streamInfoCallback(logLevel, "**********PMTElement information**********");
+    streamInfoCallback(logLevel, "stream_type: " + std::to_string(mStreamType));
+    streamInfoCallback(logLevel, "reserved0: " + std::to_string(mReserved0));
+    streamInfoCallback(logLevel, "elementary_PID: " + std::to_string(mElementaryPid));
+    streamInfoCallback(logLevel, "reserved1: " + std::to_string(mReserved1));
+    streamInfoCallback(logLevel, "ES_info_length: " + std::to_string(mEsInfoLength));
+    streamInfoCallback(logLevel, "ES_info: " + mEsInfo);
 }
 
 PMTHeader::PMTHeader() = default;
@@ -262,25 +264,26 @@ uint16_t PMTHeader::size() {
     return lRet;
 }
 
-void PMTHeader::print(const std::function<void(const std::string&)>& streamInfoCallback) {
-    streamInfoCallback("----------PMT information----------");
-    streamInfoCallback("table_id: " + std::to_string(mTableId));
-    streamInfoCallback("section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
-    streamInfoCallback("b0: " + std::to_string(mB0));
-    streamInfoCallback("reserved0: " + std::to_string(mReserved0));
-    streamInfoCallback("section_length: " + std::to_string(mSectionLength));
-    streamInfoCallback("program_number: " + std::to_string(mProgramNumber));
-    streamInfoCallback("reserved1: " + std::to_string(mReserved1));
-    streamInfoCallback("version_number: " + std::to_string(mVersionNumber));
-    streamInfoCallback("current_next_indicator: " + std::to_string(mCurrentNextIndicator));
-    streamInfoCallback("section_number: " + std::to_string(mSectionNumber));
-    streamInfoCallback("last_section_number: " + std::to_string(mLastSectionNumber));
-    streamInfoCallback("reserved2: " + std::to_string(mReserved2));
-    streamInfoCallback("PCR_PID: " + std::to_string(mPcrPid));
-    streamInfoCallback("reserved3: " + std::to_string(mReserved3));
-    streamInfoCallback("program_info_length: " + std::to_string(mProgramInfoLength));
-    for (int lI = 0; lI < static_cast<int>(mInfos.size()); lI++) {
-        mInfos[lI]->print(streamInfoCallback);
+void PMTHeader::print(LogLevel logLevel,
+                      const std::function<void(LogLevel logLevel, const std::string&)>& streamInfoCallback) {
+    streamInfoCallback(logLevel, "----------PMT information----------");
+    streamInfoCallback(logLevel, "table_id: " + std::to_string(mTableId));
+    streamInfoCallback(logLevel, "section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
+    streamInfoCallback(logLevel, "b0: " + std::to_string(mB0));
+    streamInfoCallback(logLevel, "reserved0: " + std::to_string(mReserved0));
+    streamInfoCallback(logLevel, "section_length: " + std::to_string(mSectionLength));
+    streamInfoCallback(logLevel, "program_number: " + std::to_string(mProgramNumber));
+    streamInfoCallback(logLevel, "reserved1: " + std::to_string(mReserved1));
+    streamInfoCallback(logLevel, "version_number: " + std::to_string(mVersionNumber));
+    streamInfoCallback(logLevel, "current_next_indicator: " + std::to_string(mCurrentNextIndicator));
+    streamInfoCallback(logLevel, "section_number: " + std::to_string(mSectionNumber));
+    streamInfoCallback(logLevel, "last_section_number: " + std::to_string(mLastSectionNumber));
+    streamInfoCallback(logLevel, "reserved2: " + std::to_string(mReserved2));
+    streamInfoCallback(logLevel, "PCR_PID: " + std::to_string(mPcrPid));
+    streamInfoCallback(logLevel, "reserved3: " + std::to_string(mReserved3));
+    streamInfoCallback(logLevel, "program_info_length: " + std::to_string(mProgramInfoLength));
+    for (auto& mInfo : mInfos) {
+        mInfo->print(logLevel, streamInfoCallback);
     }
 }
 
