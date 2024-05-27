@@ -25,6 +25,12 @@ bool UnitTest7::runTest() {
     mDemuxer.pcrOutCallback = std::bind(&UnitTest7::dmxOutputPcr, this, std::placeholders::_1);
 
     std::ifstream lFile("bars.ts", std::ios::binary | std::ios::in);
+    if (!lFile.is_open()) {
+        std::cout << "Failed to open bars.ts - please create it using generate_bars.sh" << std::endl;
+        mUnitTestStatus = false;
+        return mUnitTestStatus;
+    }
+
     uint8_t lPacket[300] = {0};
     SimpleBuffer lIn;
 
