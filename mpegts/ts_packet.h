@@ -14,7 +14,7 @@
 
 #include "common.h"
 
-class SimpleBuffer;
+namespace mpegts {
 
 class EsFrame final {
 public:
@@ -192,3 +192,5 @@ public:
     uint8_t mPtsDtsFlags = 0;             // 2 bits
     uint8_t mHeaderDataLength = 0;        // 8 bits
 };
+
+}

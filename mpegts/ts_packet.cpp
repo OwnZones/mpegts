@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+namespace mpegts {
+
 EsFrame::EsFrame() {
     mData = std::make_shared<SimpleBuffer>();
 }
@@ -377,4 +379,6 @@ void PESHeader::decode(SimpleBuffer& rSb) {
     mPtsDtsFlags = (lB7 >> 6) & 0x03;
 
     mHeaderDataLength = rSb.read1Byte();
+}
+
 }

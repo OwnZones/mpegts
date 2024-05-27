@@ -1,6 +1,8 @@
 #include "mpegts_demuxer.h"
 #include "common.h"
 
+namespace mpegts {
+
 MpegTsDemuxer::MpegTsDemuxer()
         : mPmtId(0), mPcrId(0) {
 
@@ -196,4 +198,6 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
 
     rIn.clear();
     return 0;
+}
+
 }

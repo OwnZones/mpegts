@@ -13,6 +13,8 @@
 #include <functional>
 #include <mutex>
 
+namespace mpegts {
+
 class MpegTsMuxer {
 public:
     enum class MuxType: uint8_t {
@@ -60,4 +62,6 @@ private:
     std::mutex mMuxMtx;
 
 };
+
+}
 
