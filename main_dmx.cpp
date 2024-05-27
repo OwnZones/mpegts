@@ -10,6 +10,8 @@
 //H.265 video
 #define TYPE_VIDEO_H265 0x24
 
+using namespace mpegts;
+
 MpegTsDemuxer gDemuxer;
 
 int aFrameCounter = {1};

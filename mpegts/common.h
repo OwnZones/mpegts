@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 
+namespace mpegts {
+
 class MpegTsAdaptationFieldType {
 public:
     // Reserved for future use by ISO/IEC
@@ -42,3 +44,4 @@ extern uint64_t readPts(SimpleBuffer &rSb);
 
 extern uint64_t readPcr(SimpleBuffer &rSb);
 
+}

@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 
+namespace mpegts {
+
 static const uint32_t crcTable[256] = {
         0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
         0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,
@@ -56,3 +58,4 @@ static const uint32_t crcTable[256] = {
 
 extern uint32_t crc32(const uint8_t *pData, int lLen);
 
+}

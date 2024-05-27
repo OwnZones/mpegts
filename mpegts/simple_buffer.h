@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <iostream>
 
+namespace mpegts {
+
 // only support little endian
 class SimpleBuffer
 {
@@ -44,4 +46,5 @@ private:
     int mPos;
 };
 
+}
 #endif /* __SIMPLE_BUFFER_H__ */

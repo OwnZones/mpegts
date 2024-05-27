@@ -9,6 +9,8 @@
 #include <random>
 #include "mpegts_demuxer.h"
 
+using namespace mpegts;
+
 class UnitTest7 {
 public:
     bool runTest();

@@ -16,6 +16,8 @@
 #include <functional>
 #include <mutex>
 
+namespace mpegts {
+
 class MpegTsDemuxer {
 public:
 
@@ -48,3 +50,4 @@ private:
     SimpleBuffer mRestData;
 };
 
+}

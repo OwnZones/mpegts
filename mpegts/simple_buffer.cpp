@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <iterator>
 
+namespace mpegts {
+
 SimpleBuffer::SimpleBuffer()
     : mPos(0)
 {
@@ -221,3 +223,4 @@ void SimpleBuffer::setData(int pos, const uint8_t* data, int len)
     }
 }
 
+}

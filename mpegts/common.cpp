@@ -1,6 +1,8 @@
 #include "common.h"
 #include "simple_buffer.h"
 
+namespace mpegts {
+
 void writePcr(SimpleBuffer &rSb, uint64_t lPcr) {
     rSb.write1Byte((int8_t) (lPcr >> 25));
     rSb.write1Byte((int8_t) (lPcr >> 17));
@@ -58,4 +60,6 @@ uint64_t readPcr(SimpleBuffer &rSb) {
     rSb.read1Byte();
 
     return lPcr;
+}
+
 }

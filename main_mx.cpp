@@ -49,6 +49,8 @@ uint64_t gAudioFrameCounter = 0;
 uint64_t gFirstPts = 0;
 uint64_t gPtsLoopDuration = 0;
 
+using namespace mpegts;
+
 //Create the multiplexer
 MpegTsMuxer *gpMuxer;
 
