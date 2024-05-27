@@ -178,7 +178,6 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                     }
                     lEsFrame.reset();
                 }
-
             }
         } else if (mPcrId != 0 && mPcrId == lTsHeader.mPid) {
             AdaptationFieldHeader lAdaptField;
