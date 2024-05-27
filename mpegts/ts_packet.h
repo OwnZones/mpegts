@@ -52,6 +52,9 @@ public:
 
     void decode(SimpleBuffer& rSb);
 
+    bool hasPayload() const;
+    bool hasAdaptationField() const;
+
     uint8_t mSyncByte = 0x47;                // 8 bits
     uint8_t mTransportErrorIndicator = 0;    // 1 bit
     uint8_t mPayloadUnitStartIndicator = 0;  // 1 bit
