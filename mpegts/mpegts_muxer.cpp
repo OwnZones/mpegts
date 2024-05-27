@@ -7,9 +7,9 @@ static const uint16_t MPEGTS_NULL_PACKET_PID = 0x1FFF;
 static const uint16_t MPEGTS_PAT_PID         = 0x0000;
 static const uint32_t MPEGTS_PAT_INTERVAL        = 20;
 
-MpegTsMuxer::MpegTsMuxer(std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint16_t lPcrPid,  MuxType lType) {
+MpegTsMuxer::MpegTsMuxer(std::vector<std::shared_ptr<PMTElementInfo>> lEsStreamInfo, uint16_t lPmtPid, uint16_t lPcrPid,  MuxType lType) {
     mPmtPid = lPmtPid;
-    mStreamPidMap = lStreamPidMap;
+    mEsStreamInfo = lEsStreamInfo;
     mPcrPid = lPcrPid;
     mMuxType = lType;
 }
@@ -66,7 +66,7 @@ void MpegTsMuxer::createPat(SimpleBuffer &rSb, uint16_t lPmtPid, uint8_t lCc) {
     rSb.append(lPatSb.data(), lPatSb.size());
 }
 
-void MpegTsMuxer::createPmt(SimpleBuffer &rSb, std::map<uint8_t, int> lStreamPidMap, uint16_t lPmtPid, uint8_t lCc) {
+void MpegTsMuxer::createPmt(SimpleBuffer &rSb, std::vector<std::shared_ptr<PMTElementInfo>> lEsStreamInfo, uint16_t lPmtPid, uint8_t lCc) {
     SimpleBuffer lPmtSb;
     TsHeader lTsHeader;
     lTsHeader.mSyncByte = 0x47;
@@ -96,9 +96,7 @@ void MpegTsMuxer::createPmt(SimpleBuffer &rSb, std::map<uint8_t, int> lStreamPid
     lPmtHeader.mReserved3 = 0xf;
     lPmtHeader.mProgramInfoLength = 0;
     lPmtHeader.mPcrPid = mPcrPid;
-    for (auto lIt = lStreamPidMap.begin(); lIt != lStreamPidMap.end(); lIt++) {
-        lPmtHeader.mInfos.push_back(std::shared_ptr<PMTElementInfo>(new PMTElementInfo(lIt->first, lIt->second)));
-    }
+    lPmtHeader.mInfos = lEsStreamInfo;
 
     uint16_t lSectionLength = lPmtHeader.size() - 3 + 4;
     lPmtHeader.mSectionLength = lSectionLength & 0x3ff;
@@ -326,11 +324,11 @@ void MpegTsMuxer::encode(EsFrame &rFrame, uint8_t lTag, bool lRandomAccess) {
     if (mMuxType == MpegTsMuxer::MuxType::segmentType && lRandomAccess) {
         uint8_t lPatPmtCc = getCc(0);
         createPat(lSb, mPmtPid, lPatPmtCc);
-        createPmt(lSb, mStreamPidMap, mPmtPid, lPatPmtCc);
+        createPmt(lSb, mEsStreamInfo, mPmtPid, lPatPmtCc);
     } else if (mMuxType == MpegTsMuxer::MuxType::h222Type && shouldCreatePat()) {  //FIXME h222Type is NOT implemented correct
         uint8_t lPatPmtCc = getCc(0);
         createPat(lSb, mPmtPid, lPatPmtCc);
-        createPmt(lSb, mStreamPidMap, mPmtPid, lPatPmtCc);
+        createPmt(lSb, mEsStreamInfo, mPmtPid, lPatPmtCc);
     }
 
     createPes(rFrame, lSb);

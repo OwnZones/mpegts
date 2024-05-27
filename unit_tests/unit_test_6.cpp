@@ -101,9 +101,9 @@ bool UnitTest6::runTest() {
     mDemuxer.esOutCallback = std::bind(&UnitTest6::dmxOutputPts, this, std::placeholders::_1);
 
     uint8_t testVector[TEST_VECTOR_SIZE];
-    std::map<uint8_t, int> gStreamPidMap;
-    gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
-    mpMuxer = new MpegTsMuxer(gStreamPidMap, PMT_PID, PCR_PID, MpegTsMuxer::MuxType::h222Type);
+    std::vector<std::shared_ptr<PMTElementInfo>> gEsStreamInfo;
+    gEsStreamInfo.push_back(std::shared_ptr<PMTElementInfo>(new PMTElementInfo(TYPE_VIDEO, VIDEO_PID)));
+    mpMuxer = new MpegTsMuxer(gEsStreamInfo, PMT_PID, PCR_PID, MpegTsMuxer::MuxType::h222Type);
     mpMuxer->tsOutCallback = std::bind(&UnitTest6::muxOutput, this, std::placeholders::_1);
 
     //Make Vector
@@ -199,8 +199,9 @@ bool UnitTest6::runTest() {
     //So we delete the old muxer and create a new one using the video pid as PCR pid
     //That means that the PCR will be taken from the Elementary stream data.
     delete mpMuxer;
-    mpMuxer = new MpegTsMuxer(gStreamPidMap, PMT_PID, VIDEO_PID, MpegTsMuxer::MuxType::h222Type);
+    mpMuxer = new MpegTsMuxer(gEsStreamInfo, PMT_PID, VIDEO_PID, MpegTsMuxer::MuxType::h222Type);
     mpMuxer->tsOutCallback = std::bind(&UnitTest6::muxOutput, this, std::placeholders::_1);
+
 
     //Send frames containing PTS / DTS then also send in band PCR
     for (int x = 1; x < NUM_FRAMES_LOOP; x++) {

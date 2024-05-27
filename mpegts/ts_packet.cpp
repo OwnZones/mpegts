@@ -144,7 +144,7 @@ void PMTElementInfo::encode(SimpleBuffer& rSb) {
     rSb.write2Bytes(lB3b4);
 
     if (mEsInfoLength > 0) {
-        // TODO:
+        rSb.writeString(mEsInfo);
     }
 }
 

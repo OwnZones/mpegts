@@ -58,6 +58,12 @@ void SimpleBuffer::write8Bytes(int64_t val)
     }
 }
 
+void SimpleBuffer::writeString(std::string str){
+   for (char c : str) {
+        mData.push_back(static_cast<uint8_t>(c));
+    }
+}
+
 void SimpleBuffer::append(const uint8_t* bytes, int size)
 {
     if (!bytes || size <= 0) {
@@ -155,10 +161,9 @@ int64_t SimpleBuffer::read8Bytes()
 std::string SimpleBuffer::readString(int len)
 {
     assert(require(len));
-
-    std::string val(*(char*)&mData[0] + mPos, len);
+    std::vector<uint8_t> subData(mData.begin() + mPos, mData.begin() + mPos + len);
+    std::string val(subData.begin(), subData.end());
     mPos += len;
-
     return val;
 }
 

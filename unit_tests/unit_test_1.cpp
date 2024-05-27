@@ -90,9 +90,9 @@ bool UnitTest1::runTest() {
     mDemuxer.esOutCallback = std::bind(&UnitTest1::dmxOutput, this, std::placeholders::_1);
 
     uint8_t testVector[TEST_VECTOR_SIZE];
-    std::map<uint8_t, int> gStreamPidMap;
-    gStreamPidMap[TYPE_VIDEO] = VIDEO_PID;
-    MpegTsMuxer lMuxer(gStreamPidMap, PMT_PID, VIDEO_PID, MpegTsMuxer::MuxType::h222Type);
+    std::vector<std::shared_ptr<PMTElementInfo>> gEsStreamInfo;
+    gEsStreamInfo.push_back(std::shared_ptr<PMTElementInfo>(new PMTElementInfo(TYPE_VIDEO, VIDEO_PID)));
+    MpegTsMuxer lMuxer(gEsStreamInfo, PMT_PID, VIDEO_PID, MpegTsMuxer::MuxType::h222Type);
     lMuxer.tsOutCallback = std::bind(&UnitTest1::muxOutput, this, std::placeholders::_1);
 
     //Make Vector
