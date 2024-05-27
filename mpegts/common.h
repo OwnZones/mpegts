@@ -20,6 +20,18 @@ public:
     static const uint8_t mPayloadAdaptionBoth = 0x03;
 };
 
+///
+/// @brief Log levels
+enum class LogLevel {
+    kTrace,    // Detailed diagnostics (for development only)
+    kDebug,    // Messages intended for debugging only
+    kInfo,     // Messages about normal behavior (default log level)
+    kWarning,  // Warnings (functionality intact)
+    kError,    // Recoverable errors (functionality impaired)
+    kCritical, // Unrecoverable errors (application must stop)
+    kOff       // Turns off all logging
+};
+
 class SimpleBuffer;
 
 extern void writePcr(SimpleBuffer &rSb, uint64_t lPcr);

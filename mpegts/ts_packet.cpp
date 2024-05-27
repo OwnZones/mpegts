@@ -31,7 +31,7 @@ TsHeader::TsHeader() = default;
 
 TsHeader::~TsHeader() = default;
 
-void TsHeader::encode(SimpleBuffer &rSb) {
+void TsHeader::encode(SimpleBuffer& rSb) {
     rSb.write1Byte(mSyncByte);
 
     uint16_t lB1b2 = mPid & 0x1FFF;
@@ -46,7 +46,7 @@ void TsHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(lB3);
 }
 
-void TsHeader::decode(SimpleBuffer &rSb) {
+void TsHeader::decode(SimpleBuffer& rSb) {
     mSyncByte = rSb.read1Byte();
 
     uint16_t lB1b2 = rSb.read2Bytes();
@@ -65,7 +65,7 @@ PATHeader::PATHeader() = default;
 
 PATHeader::~PATHeader() = default;
 
-void PATHeader::encode(SimpleBuffer &rSb) {
+void PATHeader::encode(SimpleBuffer& rSb) {
     rSb.write1Byte(mTableId);
 
     uint16_t lB1b2 = mSectionLength & 0x0FFF;
@@ -85,7 +85,7 @@ void PATHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mLastSectionNumber);
 }
 
-void PATHeader::decode(SimpleBuffer &rSb) {
+void PATHeader::decode(SimpleBuffer& rSb) {
     mTableId = rSb.read1Byte();
 
     uint16_t lB1b2 = rSb.read2Bytes();
@@ -105,19 +105,20 @@ void PATHeader::decode(SimpleBuffer &rSb) {
     mLastSectionNumber = rSb.read1Byte();
 }
 
-void PATHeader::print(const std::function<void(const std::string&)>& streamInfoCallback) {
-    streamInfoCallback("----------PAT information----------");
-    streamInfoCallback("table_id: " + std::to_string(mTableId));
-    streamInfoCallback("section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
-    streamInfoCallback("b0: " + std::to_string(mB0));
-    streamInfoCallback("reserved0: " + std::to_string(mReserved0));
-    streamInfoCallback("section_length: " + std::to_string(mSectionLength));
-    streamInfoCallback("transport_stream_id: " + std::to_string(mTransportStreamId));
-    streamInfoCallback("reserved1: " + std::to_string(mReserved1));
-    streamInfoCallback("version_number: " + std::to_string(mVersionNumber));
-    streamInfoCallback("current_next_indicator: " + std::to_string(mCurrentNextIndicator));
-    streamInfoCallback("section_number: " + std::to_string(mSectionNumber));
-    streamInfoCallback("last_section_number: " + std::to_string(mLastSectionNumber));
+void PATHeader::print(LogLevel logLevel,
+                      const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) {
+    streamInfoCallback(logLevel, "----------PAT information----------");
+    streamInfoCallback(logLevel, "table_id: " + std::to_string(mTableId));
+    streamInfoCallback(logLevel, "section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
+    streamInfoCallback(logLevel, "b0: " + std::to_string(mB0));
+    streamInfoCallback(logLevel, "reserved0: " + std::to_string(mReserved0));
+    streamInfoCallback(logLevel, "section_length: " + std::to_string(mSectionLength));
+    streamInfoCallback(logLevel, "transport_stream_id: " + std::to_string(mTransportStreamId));
+    streamInfoCallback(logLevel, "reserved1: " + std::to_string(mReserved1));
+    streamInfoCallback(logLevel, "version_number: " + std::to_string(mVersionNumber));
+    streamInfoCallback(logLevel, "current_next_indicator: " + std::to_string(mCurrentNextIndicator));
+    streamInfoCallback(logLevel, "section_number: " + std::to_string(mSectionNumber));
+    streamInfoCallback(logLevel, "last_section_number: " + std::to_string(mLastSectionNumber));
 }
 
 PMTElementInfo::PMTElementInfo(uint8_t lSt, uint16_t lPid)
@@ -131,7 +132,7 @@ PMTElementInfo::PMTElementInfo()
 
 PMTElementInfo::~PMTElementInfo() = default;
 
-void PMTElementInfo::encode(SimpleBuffer &rSb) {
+void PMTElementInfo::encode(SimpleBuffer& rSb) {
     rSb.write1Byte(mStreamType);
 
     uint16_t lB1b2 = mElementaryPid & 0x1FFF;
@@ -147,7 +148,7 @@ void PMTElementInfo::encode(SimpleBuffer &rSb) {
     }
 }
 
-void PMTElementInfo::decode(SimpleBuffer &rSb) {
+void PMTElementInfo::decode(SimpleBuffer& rSb) {
     mStreamType = rSb.read1Byte();
 
     uint16_t lB1b2 = rSb.read2Bytes();
@@ -167,21 +168,22 @@ uint16_t PMTElementInfo::size() {
     return 5 + mEsInfoLength;
 }
 
-void PMTElementInfo::print(const std::function<void(const std::string&)>& streamInfoCallback) {
-    streamInfoCallback("**********PMTElement information**********");
-    streamInfoCallback("stream_type: " + std::to_string(mStreamType));
-    streamInfoCallback("reserved0: " + std::to_string(mReserved0));
-    streamInfoCallback("elementary_PID: " + std::to_string(mElementaryPid));
-    streamInfoCallback("reserved1: " + std::to_string(mReserved1));
-    streamInfoCallback("ES_info_length: " + std::to_string(mEsInfoLength));
-    streamInfoCallback("ES_info: " + mEsInfo);
+void PMTElementInfo::print(LogLevel logLevel,
+                           const std::function<void(LogLevel logLevel, const std::string&)>& streamInfoCallback) {
+    streamInfoCallback(logLevel, "**********PMTElement information**********");
+    streamInfoCallback(logLevel, "stream_type: " + std::to_string(mStreamType));
+    streamInfoCallback(logLevel, "reserved0: " + std::to_string(mReserved0));
+    streamInfoCallback(logLevel, "elementary_PID: " + std::to_string(mElementaryPid));
+    streamInfoCallback(logLevel, "reserved1: " + std::to_string(mReserved1));
+    streamInfoCallback(logLevel, "ES_info_length: " + std::to_string(mEsInfoLength));
+    streamInfoCallback(logLevel, "ES_info: " + mEsInfo);
 }
 
 PMTHeader::PMTHeader() = default;
 
 PMTHeader::~PMTHeader() = default;
 
-void PMTHeader::encode(SimpleBuffer &rSb) {
+void PMTHeader::encode(SimpleBuffer& rSb) {
     rSb.write1Byte(mTableId);
 
     uint16_t lB1b2 = mSectionLength & 0xFFFF;
@@ -208,12 +210,12 @@ void PMTHeader::encode(SimpleBuffer &rSb) {
     lB10b11 |= (mReserved3 << 12) & 0xF000;
     rSb.write2Bytes(lB10b11);
 
-    for (int lI = 0; lI < static_cast<int>(mInfos.size()); lI++) {
-        mInfos[lI]->encode(rSb);
+    for (std::shared_ptr<PMTElementInfo>& mInfo : mInfos) {
+        mInfo->encode(rSb);
     }
 }
 
-void PMTHeader::decode(SimpleBuffer &rSb) {
+void PMTHeader::decode(SimpleBuffer& rSb) {
     mTableId = rSb.read1Byte();
 
     uint16_t lB1b2 = rSb.read2Bytes();
@@ -255,32 +257,33 @@ void PMTHeader::decode(SimpleBuffer &rSb) {
 
 uint16_t PMTHeader::size() {
     uint16_t lRet = 12;
-    for (int lI = 0; lI < static_cast<int>(mInfos.size()); lI++) {
-        lRet += mInfos[lI]->size();
+    for (std::shared_ptr<PMTElementInfo>& mInfo : mInfos) {
+        lRet += mInfo->size();
     }
 
     return lRet;
 }
 
-void PMTHeader::print(const std::function<void(const std::string&)>& streamInfoCallback) {
-    streamInfoCallback("----------PMT information----------");
-    streamInfoCallback("table_id: " + std::to_string(mTableId));
-    streamInfoCallback("section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
-    streamInfoCallback("b0: " + std::to_string(mB0));
-    streamInfoCallback("reserved0: " + std::to_string(mReserved0));
-    streamInfoCallback("section_length: " + std::to_string(mSectionLength));
-    streamInfoCallback("program_number: " + std::to_string(mProgramNumber));
-    streamInfoCallback("reserved1: " + std::to_string(mReserved1));
-    streamInfoCallback("version_number: " + std::to_string(mVersionNumber));
-    streamInfoCallback("current_next_indicator: " + std::to_string(mCurrentNextIndicator));
-    streamInfoCallback("section_number: " + std::to_string(mSectionNumber));
-    streamInfoCallback("last_section_number: " + std::to_string(mLastSectionNumber));
-    streamInfoCallback("reserved2: " + std::to_string(mReserved2));
-    streamInfoCallback("PCR_PID: " + std::to_string(mPcrPid));
-    streamInfoCallback("reserved3: " + std::to_string(mReserved3));
-    streamInfoCallback("program_info_length: " + std::to_string(mProgramInfoLength));
-    for (int lI = 0; lI < static_cast<int>(mInfos.size()); lI++) {
-        mInfos[lI]->print(streamInfoCallback);
+void PMTHeader::print(LogLevel logLevel,
+                      const std::function<void(LogLevel logLevel, const std::string&)>& streamInfoCallback) {
+    streamInfoCallback(logLevel, "----------PMT information----------");
+    streamInfoCallback(logLevel, "table_id: " + std::to_string(mTableId));
+    streamInfoCallback(logLevel, "section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
+    streamInfoCallback(logLevel, "b0: " + std::to_string(mB0));
+    streamInfoCallback(logLevel, "reserved0: " + std::to_string(mReserved0));
+    streamInfoCallback(logLevel, "section_length: " + std::to_string(mSectionLength));
+    streamInfoCallback(logLevel, "program_number: " + std::to_string(mProgramNumber));
+    streamInfoCallback(logLevel, "reserved1: " + std::to_string(mReserved1));
+    streamInfoCallback(logLevel, "version_number: " + std::to_string(mVersionNumber));
+    streamInfoCallback(logLevel, "current_next_indicator: " + std::to_string(mCurrentNextIndicator));
+    streamInfoCallback(logLevel, "section_number: " + std::to_string(mSectionNumber));
+    streamInfoCallback(logLevel, "last_section_number: " + std::to_string(mLastSectionNumber));
+    streamInfoCallback(logLevel, "reserved2: " + std::to_string(mReserved2));
+    streamInfoCallback(logLevel, "PCR_PID: " + std::to_string(mPcrPid));
+    streamInfoCallback(logLevel, "reserved3: " + std::to_string(mReserved3));
+    streamInfoCallback(logLevel, "program_info_length: " + std::to_string(mProgramInfoLength));
+    for (std::shared_ptr<PMTElementInfo>& mInfo : mInfos) {
+        mInfo->print(logLevel, streamInfoCallback);
     }
 }
 
@@ -288,7 +291,7 @@ AdaptationFieldHeader::AdaptationFieldHeader() = default;
 
 AdaptationFieldHeader::~AdaptationFieldHeader() = default;
 
-void AdaptationFieldHeader::encode(SimpleBuffer &rSb) {
+void AdaptationFieldHeader::encode(SimpleBuffer& rSb) {
     rSb.write1Byte(mAdaptationFieldLength);
     if (mAdaptationFieldLength != 0) {
         uint8_t lVal = mAdaptationFieldExtensionFlag & 0x01;
@@ -303,7 +306,7 @@ void AdaptationFieldHeader::encode(SimpleBuffer &rSb) {
     }
 }
 
-void AdaptationFieldHeader::decode(SimpleBuffer &rSb) {
+void AdaptationFieldHeader::decode(SimpleBuffer& rSb) {
     mAdaptationFieldLength = rSb.read1Byte();
     if (mAdaptationFieldLength != 0) {
         uint8_t lVal = rSb.read1Byte();
@@ -322,7 +325,7 @@ PESHeader::PESHeader() = default;
 
 PESHeader::~PESHeader() = default;
 
-void PESHeader::encode(SimpleBuffer &rSb) {
+void PESHeader::encode(SimpleBuffer& rSb) {
     uint32_t lB0b1b2b3 = (mPacketStartCode << 8) & 0xFFFFFF00;
     lB0b1b2b3 |= mStreamId & 0xFF;
     rSb.write4Bytes(lB0b1b2b3);
@@ -349,7 +352,7 @@ void PESHeader::encode(SimpleBuffer &rSb) {
     rSb.write1Byte(mHeaderDataLength);
 }
 
-void PESHeader::decode(SimpleBuffer &rSb) {
+void PESHeader::decode(SimpleBuffer& rSb) {
     uint32_t lB0b1b2b3 = rSb.read4Bytes();
     mPacketStartCode = (lB0b1b2b3 >> 8) & 0x00FFFFFF;
     mStreamId = (lB0b1b2b3) & 0xFF;

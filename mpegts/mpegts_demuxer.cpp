@@ -39,7 +39,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                 mPatIsValid = true;
 
                 if (streamInfoCallback != nullptr) {
-                    mPatHeader.print(streamInfoCallback);
+                    mPatHeader.print(LogLevel::kTrace, streamInfoCallback);
                 }
             }
         }
@@ -66,7 +66,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                 mPmtIsValid = true;
 
                 if (streamInfoCallback != nullptr) {
-                    mPmtHeader.print(streamInfoCallback);
+                    mPmtHeader.print(LogLevel::kTrace, streamInfoCallback);
                 }
             }
         }
