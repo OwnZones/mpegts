@@ -20,17 +20,19 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
         TsHeader lTsHeader;
         lTsHeader.decode(rIn);
 
+        uint8_t lDiscontinuityIndicator = 0;
+
         // found pat & get pmt pid
         if (lTsHeader.mPid == 0 && mPmtId == 0) {
-            if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
-                lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
+            if (lTsHeader.hasAdaptationField()) {
                 AdaptationFieldHeader lAdaptionField;
                 lAdaptionField.decode(rIn);
+                lDiscontinuityIndicator = lAdaptionField.mDiscontinuityIndicator;
                 rIn.skip(lAdaptionField.mAdaptationFieldLength > 0 ? (lAdaptionField.mAdaptationFieldLength - 1) : 0);
             }
+            checkContinuityCounter(lTsHeader, lDiscontinuityIndicator);
 
-            if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadOnly ||
-                lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
+            if (lTsHeader.hasPayload()) {
                 if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
                     uint8_t lPointField = rIn.read1Byte();
                 }
@@ -48,12 +50,13 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
 
         // found pmt
         if (mEsFrames.empty() && mPmtId != 0 && lTsHeader.mPid == mPmtId) {
-            if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
-                lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
+            if (lTsHeader.hasAdaptationField()) {
                 AdaptationFieldHeader lAdaptionField;
                 lAdaptionField.decode(rIn);
+                lDiscontinuityIndicator = lAdaptionField.mDiscontinuityIndicator;
                 rIn.skip(lAdaptionField.mAdaptationFieldLength > 0 ? (lAdaptionField.mAdaptationFieldLength - 1) : 0);
             }
+            checkContinuityCounter(lTsHeader, lDiscontinuityIndicator);
 
             if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
                 uint8_t lPointField = rIn.read1Byte();
@@ -77,10 +80,10 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
             uint8_t lPcrFlag = 0;
             uint64_t lPcr = 0;
             uint8_t lRandomAccessIndicator = 0;
-            if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
-                lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
+            if (lTsHeader.hasAdaptationField()) {
                 AdaptationFieldHeader lAdaptionField;
                 lAdaptionField.decode(rIn);
+                lDiscontinuityIndicator = lAdaptionField.mDiscontinuityIndicator;
                 lRandomAccessIndicator = lAdaptionField.mRandomAccessIndicator;
                 int lAdaptFieldLength = lAdaptionField.mAdaptationFieldLength;
                 if (lAdaptionField.mPcrFlag == 1) {
@@ -95,9 +98,9 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                 }
                 rIn.skip(lAdaptFieldLength > 0 ? (lAdaptFieldLength - 1) : 0);
             }
+            checkContinuityCounter(lTsHeader, lDiscontinuityIndicator);
 
-            if (lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadOnly ||
-                lTsHeader.mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth) {
+            if (lTsHeader.hasPayload()) {
 
                 EsFrame& lEsFrame = mEsFrames[lTsHeader.mPid];
                 if (lTsHeader.mPayloadUnitStartIndicator == 0x01) {
@@ -184,10 +187,12 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
         } else if (mPcrId != 0 && mPcrId == lTsHeader.mPid) {
             AdaptationFieldHeader lAdaptField;
             lAdaptField.decode(rIn);
+            lDiscontinuityIndicator = lAdaptField.mDiscontinuityIndicator;
             uint64_t lPcr = readPcr(rIn);
             if (pcrOutCallback) {
                 pcrOutCallback(lPcr);
             }
+            checkContinuityCounter(lTsHeader, lDiscontinuityIndicator);
         }
         rIn.skip(188 - (rIn.pos() - lPos));
     }
@@ -198,6 +203,45 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
 
     rIn.clear();
     return 0;
+}
+
+void MpegTsDemuxer::checkContinuityCounter(const TsHeader &rTsHeader, uint8_t discontinuityIndicator) {
+    uint16_t pid = rTsHeader.mPid;
+    if (pid == 0x1FFF) {
+        // CC is undefined for null packets
+        return;
+    }
+
+    auto it = mCCs.find(pid);
+    if (it == mCCs.end()) {
+        // First CC on this PID
+        mCCs[pid] = rTsHeader.mContinuityCounter;
+        return;
+    }
+
+    if (discontinuityIndicator) {
+        // First CC after discontinuity
+        mCCs[pid] = rTsHeader.mContinuityCounter;
+        return;
+    }
+
+    uint8_t expectedCC;
+    uint8_t actualCC = rTsHeader.mContinuityCounter;
+    if (rTsHeader.hasPayload()) {
+        // CC should have been incremented
+        expectedCC = (it->second + 1) & 0xF;
+    } else {
+        // CC should remain the same
+        expectedCC = it->second;
+    }
+
+    mCCs[pid] = actualCC;
+
+    if (actualCC != expectedCC) {
+        if (ccErrorCallback != nullptr) {
+            ccErrorCallback(pid, expectedCC, actualCC);
+        }
+    }
 }
 
 }

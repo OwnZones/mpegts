@@ -63,6 +63,17 @@ void TsHeader::decode(SimpleBuffer& rSb) {
     mTransportScramblingControl = (lB3 >> 6) & 0x03;
 }
 
+bool TsHeader::hasPayload() const {
+    return mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadOnly ||
+           mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth;
+}
+
+bool TsHeader::hasAdaptationField() const {
+    return mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
+           mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth;
+}
+
+
 PATHeader::PATHeader() = default;
 
 PATHeader::~PATHeader() = default;

@@ -30,6 +30,7 @@ public:
     std::function<void(const EsFrame& pEs)> esOutCallback = nullptr;
     std::function<void(uint64_t lPcr)> pcrOutCallback = nullptr;
     std::function<void(LogLevel level, const std::string&)> streamInfoCallback = nullptr;
+    std::function<void(uint16_t pid, uint8_t expectedCC, uint8_t actualCC)> ccErrorCallback = nullptr;
 
     // stream, pid
     std::map<uint8_t, int> mStreamPidMap;
@@ -48,6 +49,12 @@ private:
     std::map<int, EsFrame> mEsFrames;
     int mPcrId;
     SimpleBuffer mRestData;
+
+    // Continuity counters. Map from PID to current CC value.
+    std::unordered_map<uint16_t, uint8_t> mCCs;
+
+    // Check that the CC is incremented according to spec. ccErrorCallback is called on error.
+    void checkContinuityCounter(const TsHeader &rTsHeader, uint8_t discontinuityIndicator);
 };
 
 }

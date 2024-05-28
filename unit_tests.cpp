@@ -10,6 +10,7 @@
 #include "unit_test_5.h"
 #include "unit_test_6.h"
 #include "unit_test_7.h"
+#include "unit_test_8.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Running all unit tests." << std::endl;
@@ -78,6 +79,13 @@ int main(int argc, char *argv[]) {
         returnCode = EXIT_FAILURE;
     }
 
+    //Continuity counter tests
+    std::cout << "Unit test8 started." << std::endl;
+    UnitTest8 unitTest8;
+    if (!unitTest8.runTest()) {
+        std::cout << "Unit test 8 failed" << std::endl;
+        returnCode = EXIT_FAILURE;
+    }
 
     if (returnCode == EXIT_FAILURE) {
         std::cout << "Unit tests failed." << std::endl;
