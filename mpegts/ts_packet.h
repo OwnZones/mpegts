@@ -16,6 +16,9 @@
 
 namespace mpegts {
 
+static constexpr size_t kTsPacketSize_188 = 188;
+static constexpr uint8_t kTsPacketSyncByte = 0x47;
+
 class EsFrame final {
 public:
     EsFrame();
@@ -48,14 +51,14 @@ public:
 
     ~TsHeader();
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
     bool hasPayload() const;
     bool hasAdaptationField() const;
 
-    uint8_t mSyncByte = 0x47;                // 8 bits
+    uint8_t mSyncByte = kTsPacketSyncByte;   // 8 bits
     uint8_t mTransportErrorIndicator = 0;    // 1 bit
     uint8_t mPayloadUnitStartIndicator = 0;  // 1 bit
     uint8_t mTransportPriority = 0;          // 1 bit
@@ -71,11 +74,11 @@ public:
 
     ~PATHeader();
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
-    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
+    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) const;
 
     uint8_t mTableId = 0;                // 8 bits
     uint8_t mSectionSyntaxIndicator = 0; // 1 bit
@@ -98,13 +101,13 @@ public:
 
     ~PMTElementInfo();
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
-    uint16_t size();
+    uint16_t size() const;
 
-    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
+    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) const;
 
     uint8_t mStreamType = 0;     // 8 bits
     uint8_t mReserved0 = 0x7;    // 3 bits
@@ -152,7 +155,7 @@ public:
 
     ~AdaptationFieldHeader();
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
@@ -173,7 +176,7 @@ public:
 
     ~PESHeader();
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 

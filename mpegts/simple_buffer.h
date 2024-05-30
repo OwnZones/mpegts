@@ -17,33 +17,36 @@ public:
     virtual ~SimpleBuffer();
 
 public:
-    void write1Byte(int8_t val);
-    void write2Bytes(int16_t val);
-    void write3Bytes(int32_t val);
-    void write4Bytes(int32_t val);
-    void write8Bytes(int64_t val);
-    void append(const uint8_t* bytes, int size);
-    void prepend(const uint8_t* bytes, int size);
+    void write1Byte(uint8_t val);
+    void write2Bytes(uint16_t val);
+    void write3Bytes(uint32_t val);
+    void write4Bytes(uint32_t val);
+    void write8Bytes(uint64_t val);
+    void append(const uint8_t* bytes, size_t size);
+    void prepend(const uint8_t* bytes, size_t size);
+    size_t bytesLeft();
 
-    int8_t read1Byte();
-    int16_t read2Bytes();
-    int32_t read3Bytes();
-    int32_t read4Bytes();
-    int64_t read8Bytes();
-    std::string readString(int len);
+    uint8_t read1Byte();
+    uint16_t read2Bytes();
+    uint32_t read3Bytes();
+    uint32_t read4Bytes();
+    uint64_t read8Bytes();
+    std::string readString(size_t len);
 
-    void skip(int size);
-    bool require(int required_size);
+    void skip(size_t size);
+    bool require(size_t required_size);
     bool empty();
-    int size();
-    int pos();
+    size_t size();
+    [[nodiscard]] size_t pos() const;
     uint8_t* data();
+    uint8_t* currentData();
+    size_t dataLeft();
     void clear();
-    void setData(int pos, const uint8_t* data, int len);
+    void setData(size_t pos, const uint8_t* data, size_t len);
 
 private:
     std::vector<uint8_t> mData;
-    int mPos;
+    size_t mPos = 0;
 };
 
 }

@@ -33,7 +33,7 @@ TsHeader::TsHeader() = default;
 
 TsHeader::~TsHeader() = default;
 
-void TsHeader::encode(SimpleBuffer& rSb) {
+void TsHeader::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mSyncByte);
 
     uint16_t lB1b2 = mPid & 0x1FFF;
@@ -78,7 +78,7 @@ PATHeader::PATHeader() = default;
 
 PATHeader::~PATHeader() = default;
 
-void PATHeader::encode(SimpleBuffer& rSb) {
+void PATHeader::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mTableId);
 
     uint16_t lB1b2 = mSectionLength & 0x0FFF;
@@ -119,7 +119,7 @@ void PATHeader::decode(SimpleBuffer& rSb) {
 }
 
 void PATHeader::print(LogLevel logLevel,
-                      const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) {
+                      const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) const {
     streamInfoCallback(logLevel, "----------PAT information----------");
     streamInfoCallback(logLevel, "table_id: " + std::to_string(mTableId));
     streamInfoCallback(logLevel, "section_syntax_indicator: " + std::to_string(mSectionSyntaxIndicator));
@@ -145,14 +145,14 @@ PMTElementInfo::PMTElementInfo()
 
 PMTElementInfo::~PMTElementInfo() = default;
 
-void PMTElementInfo::encode(SimpleBuffer& rSb) {
+void PMTElementInfo::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mStreamType);
 
     uint16_t lB1b2 = mElementaryPid & 0x1FFF;
     lB1b2 |= (mReserved0 << 13) & 0xE000;
     rSb.write2Bytes(lB1b2);
 
-    int16_t lB3b4 = mEsInfoLength & 0x0FFF;
+    uint16_t lB3b4 = mEsInfoLength & 0x0FFF;
     lB3b4 |= (mReserved1 << 12) & 0xF000;
     rSb.write2Bytes(lB3b4);
 
@@ -177,12 +177,12 @@ void PMTElementInfo::decode(SimpleBuffer& rSb) {
     }
 }
 
-uint16_t PMTElementInfo::size() {
+uint16_t PMTElementInfo::size() const {
     return 5 + mEsInfoLength;
 }
 
 void PMTElementInfo::print(LogLevel logLevel,
-                           const std::function<void(LogLevel logLevel, const std::string&)>& streamInfoCallback) {
+                           const std::function<void(LogLevel logLevel, const std::string&)>& streamInfoCallback) const {
     streamInfoCallback(logLevel, "**********PMTElement information**********");
     streamInfoCallback(logLevel, "stream_type: " + std::to_string(mStreamType));
     streamInfoCallback(logLevel, "reserved0: " + std::to_string(mReserved0));
@@ -304,7 +304,7 @@ AdaptationFieldHeader::AdaptationFieldHeader() = default;
 
 AdaptationFieldHeader::~AdaptationFieldHeader() = default;
 
-void AdaptationFieldHeader::encode(SimpleBuffer& rSb) {
+void AdaptationFieldHeader::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mAdaptationFieldLength);
     if (mAdaptationFieldLength != 0) {
         uint8_t lVal = mAdaptationFieldExtensionFlag & 0x01;
@@ -338,7 +338,7 @@ PESHeader::PESHeader() = default;
 
 PESHeader::~PESHeader() = default;
 
-void PESHeader::encode(SimpleBuffer& rSb) {
+void PESHeader::encode(SimpleBuffer& rSb) const {
     uint32_t lB0b1b2b3 = (mPacketStartCode << 8) & 0xFFFFFF00;
     lB0b1b2b3 |= mStreamId & 0xFF;
     rSb.write4Bytes(lB0b1b2b3);
