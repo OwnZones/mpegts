@@ -11,6 +11,7 @@
 #include "unit_test_6.h"
 #include "unit_test_7.h"
 #include "unit_test_8.h"
+#include "unit_test_9.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Running all unit tests." << std::endl;
@@ -21,6 +22,7 @@ int main(int argc, char *argv[]) {
     //please read the comment inside the unit test for more information
 
     std::cout << "Unit test1 started." << std::endl;
+
     UnitTest1 unitTest1;
     if (!unitTest1.runTest()) {
         std::cout << "Unit test 1 failed" << std::endl;
@@ -84,6 +86,14 @@ int main(int argc, char *argv[]) {
     UnitTest8 unitTest8;
     if (!unitTest8.runTest()) {
         std::cout << "Unit test 8 failed" << std::endl;
+        returnCode = EXIT_FAILURE;
+    }
+
+    //TS Packet sync
+    std::cout << "Unit test9 started." << std::endl;
+    UnitTest9 unitTest9;
+    if (!unitTest9.runTest()) {
+        std::cout << "Unit test 9 failed" << std::endl;
         returnCode = EXIT_FAILURE;
     }
 
