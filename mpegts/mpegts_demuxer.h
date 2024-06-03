@@ -18,12 +18,12 @@
 
 namespace mpegts {
 
-class MpegTsDemuxer {
+class MpegTsDemuxer final {
 public:
 
-    MpegTsDemuxer();
+    MpegTsDemuxer() = default;
 
-    virtual ~MpegTsDemuxer();
+    ~MpegTsDemuxer() = default;
 
     uint8_t decode(SimpleBuffer &rIn);
 
@@ -34,7 +34,7 @@ public:
 
     // stream, pid
     std::map<uint8_t, int> mStreamPidMap;
-    int mPmtId;
+    int mPmtId = 0;
 
     // PAT
     PATHeader mPatHeader;
@@ -45,16 +45,23 @@ public:
     bool mPmtIsValid = false;
 
 private:
+    // Check that the CC is incremented according to spec. ccErrorCallback is called on error.
+    void checkContinuityCounter(const TsHeader &rTsHeader, uint8_t discontinuityIndicator);
+
+    // Check that the current position in buffer is pointing to a sync byte and if the buffer is larger than a TS packet,
+    // the function checks that the first byte after the TS packet is also a sync byte. Returns true if the buffer is in
+    // sync with the TS packet boundaries, otherwise false.
+    static bool checkSync(SimpleBuffer& rIn);
+
     // pid, Elementary data frame
     std::map<int, EsFrame> mEsFrames;
-    int mPcrId;
+    int mPcrId = 0;
     SimpleBuffer mRestData;
 
     // Continuity counters. Map from PID to current CC value.
     std::unordered_map<uint16_t, uint8_t> mCCs;
 
-    // Check that the CC is incremented according to spec. ccErrorCallback is called on error.
-    void checkContinuityCounter(const TsHeader &rTsHeader, uint8_t discontinuityIndicator);
+    size_t mBytesDroppedToRecoverSync = 0; // Keep track of how many bytes were dropped to recover sync
 };
 
 }

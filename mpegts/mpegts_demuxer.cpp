@@ -1,22 +1,46 @@
 #include "mpegts_demuxer.h"
+
 #include "common.h"
 
 namespace mpegts {
 
-MpegTsDemuxer::MpegTsDemuxer()
-        : mPmtId(0), mPcrId(0) {
+bool MpegTsDemuxer::checkSync(SimpleBuffer& rIn) {
+    uint8_t currentSyncByte = *(rIn.currentData());
 
+    if (rIn.bytesLeft() > kTsPacketSize_188) {
+        uint8_t nextSyncByte = *(rIn.currentData() + kTsPacketSize_188);
+        return currentSyncByte == kTsPacketSyncByte && nextSyncByte == kTsPacketSyncByte;
+    }
+
+    return currentSyncByte == kTsPacketSyncByte;
 }
-
-MpegTsDemuxer::~MpegTsDemuxer() = default;
 
 uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
     if (mRestData.size()) {
-        rIn.prepend(mRestData.data(),mRestData.size());
+        rIn.prepend(mRestData.data(), mRestData.size());
         mRestData.clear();
     }
-    while ((rIn.size() - rIn.pos()) >= 188 ) {
-        int lPos = rIn.pos();
+
+    while (rIn.bytesLeft() >= kTsPacketSize_188) {
+        if (!checkSync(rIn)) {
+            // If TS packet sync is lost, skip one byte and continue until the 188 bytes packet sync is found again
+            mBytesDroppedToRecoverSync++;
+            rIn.skip(1);
+            continue;
+        }
+
+        if (mBytesDroppedToRecoverSync > 0) {
+            // Here we have recovered sync again, notify the user about the lost sync and the number of bytes dropped
+            // and reset the counter and state flag.
+            if (streamInfoCallback != nullptr) {
+                streamInfoCallback(LogLevel::kWarning, "Lost sync in TS stream, dropped " +
+                                                       std::to_string(mBytesDroppedToRecoverSync) +
+                                                       " bytes to recover TS sync");
+            }
+            mBytesDroppedToRecoverSync = 0;
+        }
+
+        const size_t lTSPacketStartPos = rIn.pos();
         TsHeader lTsHeader;
         lTsHeader.decode(rIn);
 
@@ -49,7 +73,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
         }
 
         // found pmt
-        if (mEsFrames.empty() && mPmtId != 0 && lTsHeader.mPid == mPmtId) {
+        else if (mEsFrames.empty() && mPmtId != 0 && lTsHeader.mPid == mPmtId) {
             if (lTsHeader.hasAdaptationField()) {
                 AdaptationFieldHeader lAdaptionField;
                 lAdaptionField.decode(rIn);
@@ -76,7 +100,7 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
             }
         }
 
-        if (mEsFrames.find(lTsHeader.mPid) != mEsFrames.end()) {
+        else if (mEsFrames.find(lTsHeader.mPid) != mEsFrames.end()) {
             uint8_t lPcrFlag = 0;
             uint64_t lPcr = 0;
             uint8_t lRandomAccessIndicator = 0;
@@ -136,18 +160,18 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                         // readPts function reads a "timestamp", so we use it for DTS as well
                         lEsFrame.mDts = readPts(rIn);
                     }
-                    if (lPesHeader.mPesPacketLength != 0) {
 
+                    if (lPesHeader.mPesPacketLength != 0) {
                         int payloadLength = lPesHeader.mPesPacketLength - 3 -
                                             lPesHeader.mHeaderDataLength;
 
                         lEsFrame.mExpectedPayloadLength = payloadLength;
 
-                        if (payloadLength + rIn.pos() > 188 || payloadLength < 0) {
-                            lEsFrame.mData->append(rIn.data() + rIn.pos(),
-                                                   188 - (rIn.pos() - lPos));
+                        if (payloadLength + rIn.pos() > kTsPacketSize_188 || payloadLength < 0) {
+                            lEsFrame.mData->append(rIn.currentData(),
+                                                   kTsPacketSize_188 - (rIn.pos() - lTSPacketStartPos));
                         } else {
-                            lEsFrame.mData->append(rIn.data() + rIn.pos(),
+                            lEsFrame.mData->append(rIn.currentData(),
                                                    lPesHeader.mPesPacketLength - 3 - lPesHeader.mHeaderDataLength);
                         }
 
@@ -159,20 +183,21 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
                             lEsFrame.reset();
                         }
 
-                        rIn.skip(188 - (rIn.pos() - lPos));
+                        rIn.skip(kTsPacketSize_188 - (rIn.pos() - lTSPacketStartPos));
                         continue;
                     }
                 }
 
-                if (lEsFrame.mExpectedPesPacketLength != 0 &&
-                    lEsFrame.mData->size() + 188 - (rIn.pos() - lPos) >
-                    lEsFrame.mExpectedPesPacketLength) {
+                size_t bytesLeftInTsPacket = kTsPacketSize_188 - (rIn.pos() - lTSPacketStartPos);
+                if (lEsFrame.mExpectedPayloadLength != 0 &&
+                    lEsFrame.mExpectedPayloadLength != lEsFrame.mData->size() &&
+                    lEsFrame.mData->size() + bytesLeftInTsPacket >
+                    lEsFrame.mExpectedPayloadLength) {
 
-                    uint8_t *dataPosition = rIn.data() + rIn.pos();
-                    int size = lEsFrame.mExpectedPesPacketLength - lEsFrame.mData->size();
-                    lEsFrame.mData->append(dataPosition,size);
+                    size_t size = lEsFrame.mExpectedPayloadLength - lEsFrame.mData->size();
+                    lEsFrame.mData->append(rIn.currentData(), size);
                 } else {
-                    lEsFrame.mData->append(rIn.data() + rIn.pos(), 188 - (rIn.pos() - lPos));
+                    lEsFrame.mData->append(rIn.currentData(), bytesLeftInTsPacket);
                 }
 
                 //Enough data to deliver?
@@ -194,11 +219,11 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
             }
             checkContinuityCounter(lTsHeader, lDiscontinuityIndicator);
         }
-        rIn.skip(188 - (rIn.pos() - lPos));
+        rIn.skip(kTsPacketSize_188 - (rIn.pos() - lTSPacketStartPos));
     }
 
-    if (rIn.size()-rIn.pos()) {
-        mRestData.append(rIn.data()+rIn.pos(),rIn.size()-rIn.pos());
+    if (rIn.dataLeft()) {
+        mRestData.append(rIn.currentData(), rIn.dataLeft());
     }
 
     rIn.clear();
