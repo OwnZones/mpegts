@@ -5,12 +5,7 @@
 
 namespace mpegts {
 
-EsFrame::EsFrame() {
-    mData = std::make_shared<SimpleBuffer>();
-}
-
 EsFrame::EsFrame(uint8_t streamType, uint16_t pid) : mStreamType(streamType), mPid(pid) {
-    mData = std::make_shared<SimpleBuffer>();
 }
 
 bool EsFrame::empty() {
@@ -28,10 +23,6 @@ void EsFrame::reset() {
     mBroken = false;
     mData = std::make_shared<SimpleBuffer>();
 }
-
-TsHeader::TsHeader() = default;
-
-TsHeader::~TsHeader() = default;
 
 void TsHeader::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mSyncByte);
@@ -72,11 +63,6 @@ bool TsHeader::hasAdaptationField() const {
     return mAdaptationFieldControl == MpegTsAdaptationFieldType::mAdaptionOnly ||
            mAdaptationFieldControl == MpegTsAdaptationFieldType::mPayloadAdaptionBoth;
 }
-
-
-PATHeader::PATHeader() = default;
-
-PATHeader::~PATHeader() = default;
 
 void PATHeader::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mTableId);
@@ -136,14 +122,7 @@ void PATHeader::print(LogLevel logLevel,
 
 PMTElementInfo::PMTElementInfo(uint8_t lSt, uint16_t lPid)
         : mStreamType(lSt), mElementaryPid(lPid) {
-
 }
-
-PMTElementInfo::PMTElementInfo()
-        : PMTElementInfo(0, 0) {
-}
-
-PMTElementInfo::~PMTElementInfo() = default;
 
 void PMTElementInfo::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mStreamType);
@@ -191,10 +170,6 @@ void PMTElementInfo::print(LogLevel logLevel,
     streamInfoCallback(logLevel, "ES_info_length: " + std::to_string(mEsInfoLength));
     streamInfoCallback(logLevel, "ES_info: " + mEsInfo);
 }
-
-PMTHeader::PMTHeader() = default;
-
-PMTHeader::~PMTHeader() = default;
 
 void PMTHeader::encode(SimpleBuffer& rSb) {
     rSb.write1Byte(mTableId);
@@ -300,10 +275,6 @@ void PMTHeader::print(LogLevel logLevel,
     }
 }
 
-AdaptationFieldHeader::AdaptationFieldHeader() = default;
-
-AdaptationFieldHeader::~AdaptationFieldHeader() = default;
-
 void AdaptationFieldHeader::encode(SimpleBuffer& rSb) const {
     rSb.write1Byte(mAdaptationFieldLength);
     if (mAdaptationFieldLength != 0) {
@@ -333,10 +304,6 @@ void AdaptationFieldHeader::decode(SimpleBuffer& rSb) {
         mDiscontinuityIndicator = (lVal >> 7) & 0x01;
     }
 }
-
-PESHeader::PESHeader() = default;
-
-PESHeader::~PESHeader() = default;
 
 void PESHeader::encode(SimpleBuffer& rSb) const {
     uint32_t lB0b1b2b3 = (mPacketStartCode << 8) & 0xFFFFFF00;
@@ -371,6 +338,8 @@ void PESHeader::decode(SimpleBuffer& rSb) {
     mStreamId = (lB0b1b2b3) & 0xFF;
 
     mPesPacketLength = rSb.read2Bytes();
+
+    // TODO: Verify the stream_id, the bits below are not always present
 
     uint8_t lB6 = rSb.read1Byte();
     mOriginalOrCopy = lB6 & 0x01;

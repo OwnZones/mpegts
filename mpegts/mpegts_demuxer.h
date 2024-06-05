@@ -33,6 +33,7 @@ public:
     std::function<void(uint16_t pid, uint8_t expectedCC, uint8_t actualCC)> ccErrorCallback = nullptr;
 
     // stream, pid
+    const int kPatId = 0x0;
     std::map<uint8_t, int> mStreamPidMap;
     int mPmtId = 0;
 
@@ -53,7 +54,30 @@ private:
     // sync with the TS packet boundaries, otherwise false.
     static bool checkSync(SimpleBuffer& rIn);
 
-    // pid, Elementary data frame
+    // Parse a TS packet, the input buffer should be aligned to the start of a TS packet and the buffer should be at least
+    // 188 bytes long.
+    void parseTsPacket(SimpleBuffer &rSb);
+
+    // Parse the adaptation field, will look for PCR values and pass to the pcrOutCallback. Returns the random access indicator
+    // from the adaptation field header.
+    uint8_t parseAdaptationField(const TsHeader& rTsHeader, SimpleBuffer &rSb);
+
+    // Parse the PAT table
+    void parsePat(const TsHeader& rTsHeader, SimpleBuffer &rSb);
+
+    // Parse the PMT table
+    void parsePmt(const TsHeader& rTsHeader, SimpleBuffer &rSb);
+
+    // Parse the PES data and create EsFrames. The EsFrames are passed to the esOutCallback.
+    void parsePes(const TsHeader& rTsHeader, uint8_t randomAccessIndicator, SimpleBuffer &rSb, size_t payloadSize);
+
+    // Parse the PCR value from the adaptation field and pass to the pcrOutCallback.
+    void parsePcr(const AdaptationFieldHeader& rAdaptionField, SimpleBuffer &rSb) const;
+
+    // Check if the PCR value should be parsed based on the PID and the pcrOutCallback.
+    bool shouldParsePCR(uint16_t pid) const;
+
+    // Elementary stream data frames
     std::map<int, EsFrame> mEsFrames;
     int mPcrId = 0;
     SimpleBuffer mRestData;

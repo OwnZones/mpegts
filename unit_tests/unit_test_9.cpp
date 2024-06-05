@@ -1,5 +1,3 @@
-// Copyright (c) 2024, Edgeware AB. All rights reserved.
-
 //This unit test is testing the demuxers ability to demux a broken ts stream and maintain ts packet sync
 
 #include "unit_test_9.h"
@@ -29,7 +27,7 @@ bool UnitTest9::runTest() {
     while (!lFile.eof()) {
         uint32_t lPacketSize = lPacketChunkSize[lPacketChunkSizeIndex++ % lPacketChunkSize.size()];
 
-        lFile.read((char*)&lPacket[0], lPacketSize);
+        lFile.read(reinterpret_cast<char*>(&lPacket[0]), lPacketSize);
         uint32_t lBytesRead = lFile.gcount();
 
         if (lBytesRead) {
