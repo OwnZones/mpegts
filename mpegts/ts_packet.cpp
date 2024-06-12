@@ -8,7 +8,7 @@ namespace mpegts {
 EsFrame::EsFrame(uint8_t streamType, uint16_t pid) : mStreamType(streamType), mPid(pid) {
 }
 
-bool EsFrame::empty() {
+bool EsFrame::empty() const {
     return mData->size() == 0;
 }
 
@@ -243,9 +243,9 @@ void PMTHeader::decode(SimpleBuffer& rSb) {
     }
 }
 
-uint16_t PMTHeader::size() {
+uint16_t PMTHeader::size() const {
     uint16_t lRet = 12;
-    for (std::shared_ptr<PMTElementInfo>& mInfo : mInfos) {
+    for (const std::shared_ptr<PMTElementInfo>& mInfo : mInfos) {
         lRet += mInfo->size();
     }
 

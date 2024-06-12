@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iterator>
 
-#include <assert.h>
+#include <cassert>
 
 namespace mpegts {
 
@@ -166,19 +166,19 @@ void SimpleBuffer::skip(size_t size)
     mPos += size;
 }
 
-bool SimpleBuffer::require(size_t required_size)
+bool SimpleBuffer::require(size_t required_size) const
 {
     assert(required_size >= 0);
 
     return required_size <= mData.size() - mPos;
 }
 
-bool SimpleBuffer::empty()
+bool SimpleBuffer::empty() const
 {
     return mPos >= mData.size();
 }
 
-size_t SimpleBuffer::size()
+size_t SimpleBuffer::size() const
 {
     return mData.size();
 }
@@ -198,7 +198,7 @@ uint8_t* SimpleBuffer::currentData()
     return (mData.empty() || mPos >= mData.size()) ? nullptr : &mData[mPos];
 }
 
-size_t SimpleBuffer::dataLeft()
+size_t SimpleBuffer::dataLeft() const
 {
     return mData.size() - mPos;
 }
@@ -226,10 +226,6 @@ void SimpleBuffer::setData(size_t pos, const uint8_t* data, size_t len)
     }
 
     std::memcpy(currentData(), data, len);
-}
-
-size_t SimpleBuffer::bytesLeft() {
-    return mData.size() - mPos;
 }
 
 }

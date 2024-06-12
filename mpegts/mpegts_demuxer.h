@@ -58,18 +58,18 @@ private:
     // 188 bytes long.
     void parseTsPacket(SimpleBuffer &rSb);
 
-    // Parse the adaptation field, will look for PCR values and pass to the pcrOutCallback. Returns the random access indicator
-    // from the adaptation field header.
-    uint8_t parseAdaptationField(const TsHeader& rTsHeader, SimpleBuffer &rSb);
+    // Parse the adaptation field, will look for PCR values and pass to the pcrOutCallback. Returns true if parsing was
+    // successful, otherwise false. The randomAccessIndicator is set to 1 if the packet contains a random access point.
+    bool parseAdaptationField(const TsHeader& rTsHeader, SimpleBuffer &rSb, size_t bytesLeftInPacket, uint8_t& randomAccessIndicator);
 
     // Parse the PAT table
-    void parsePat(const TsHeader& rTsHeader, SimpleBuffer &rSb);
+    bool parsePat(const TsHeader& rTsHeader, SimpleBuffer &rSb);
 
     // Parse the PMT table
-    void parsePmt(const TsHeader& rTsHeader, SimpleBuffer &rSb);
+    bool parsePmt(const TsHeader& rTsHeader, SimpleBuffer &rSb);
 
     // Parse the PES data and create EsFrames. The EsFrames are passed to the esOutCallback.
-    void parsePes(const TsHeader& rTsHeader, uint8_t randomAccessIndicator, SimpleBuffer &rSb, size_t payloadSize);
+    bool parsePes(const TsHeader& rTsHeader, uint8_t randomAccessIndicator, SimpleBuffer &rSb, size_t payloadSize);
 
     // Parse the PCR value from the adaptation field and pass to the pcrOutCallback.
     void parsePcr(const AdaptationFieldHeader& rAdaptionField, SimpleBuffer &rSb) const;

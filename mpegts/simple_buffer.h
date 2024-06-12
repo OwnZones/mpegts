@@ -24,7 +24,6 @@ public:
     void write8Bytes(uint64_t val);
     void append(const uint8_t* bytes, size_t size);
     void prepend(const uint8_t* bytes, size_t size);
-    size_t bytesLeft();
 
     uint8_t read1Byte();
     uint16_t read2Bytes();
@@ -34,13 +33,13 @@ public:
     std::string readString(size_t len);
 
     void skip(size_t size);
-    bool require(size_t required_size);
-    bool empty();
-    size_t size();
+    [[nodiscard]] bool require(size_t required_size) const;
+    [[nodiscard]] bool empty() const;
+    [[nodiscard]] size_t size() const;
     [[nodiscard]] size_t pos() const;
     uint8_t* data();
     uint8_t* currentData();
-    size_t dataLeft();
+    [[nodiscard]] size_t dataLeft() const;
     void clear();
     void setData(size_t pos, const uint8_t* data, size_t len);
 

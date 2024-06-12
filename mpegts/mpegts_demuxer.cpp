@@ -4,10 +4,12 @@
 
 namespace mpegts {
 
+#define LOG(level, msg) if (streamInfoCallback != nullptr) { streamInfoCallback(level, msg); }
+
 bool MpegTsDemuxer::checkSync(SimpleBuffer& rIn) {
     uint8_t currentSyncByte = *(rIn.currentData());
 
-    if (rIn.bytesLeft() > kTsPacketSize_188) {
+    if (rIn.dataLeft() > kTsPacketSize_188) {
         uint8_t nextSyncByte = *(rIn.currentData() + kTsPacketSize_188);
         return currentSyncByte == kTsPacketSyncByte && nextSyncByte == kTsPacketSyncByte;
     }
@@ -16,12 +18,12 @@ bool MpegTsDemuxer::checkSync(SimpleBuffer& rIn) {
 }
 
 uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
-    if (mRestData.size()) {
+    if (!mRestData.empty()) {
         rIn.prepend(mRestData.data(), mRestData.size());
         mRestData.clear();
     }
 
-    while (rIn.bytesLeft() >= kTsPacketSize_188) {
+    while (rIn.dataLeft() >= kTsPacketSize_188) {
         if (!checkSync(rIn)) {
             // If TS packet sync is lost, skip one byte and continue until the 188 bytes packet sync is found again
             mBytesDroppedToRecoverSync++;
@@ -32,11 +34,9 @@ uint8_t MpegTsDemuxer::decode(SimpleBuffer &rIn) {
         if (mBytesDroppedToRecoverSync > 0) {
             // Here we have recovered sync again, notify the user about the lost sync and the number of bytes dropped
             // and reset the counter and state flag.
-            if (streamInfoCallback != nullptr) {
-                streamInfoCallback(LogLevel::kWarning, "Lost sync in TS stream, dropped " +
-                                                       std::to_string(mBytesDroppedToRecoverSync) +
-                                                       " bytes to recover TS sync");
-            }
+            LOG(LogLevel::kWarning, "Lost sync in TS stream, dropped " +
+                                    std::to_string(mBytesDroppedToRecoverSync) +
+                                    " bytes to recover TS sync");
             mBytesDroppedToRecoverSync = 0;
         }
 
@@ -64,7 +64,11 @@ void MpegTsDemuxer::parseTsPacket(mpegts::SimpleBuffer& rSb) {
         return;
     }
 
-    uint8_t lRandomAccessIndicator = parseAdaptationField(lTsHeader, rSb);
+    uint8_t lRandomAccessIndicator = 0;
+    if (!parseAdaptationField(lTsHeader, rSb, kTsPacketSize_188 - (rSb.pos() - lTSPacketStartPos), lRandomAccessIndicator)) {
+        LOG(LogLevel::kWarning, "Failed to parse adaptation field");
+        return;
+    }
 
     if (!lTsHeader.hasPayload()) {
         rSb.skip(kTsPacketSize_188 - (rSb.pos() - lTSPacketStartPos));
@@ -73,49 +77,53 @@ void MpegTsDemuxer::parseTsPacket(mpegts::SimpleBuffer& rSb) {
 
     if (lTsHeader.mPid == kPatId && mPmtId == 0) {
         // Found PAT, parse it to get PMT pid
-        parsePat(lTsHeader, rSb);
+        if (!parsePat(lTsHeader, rSb)) {
+            LOG(LogLevel::kWarning, "Failed to parse PAT");
+        }
     }
     else if (mEsFrames.empty() && mPmtId != 0 && lTsHeader.mPid == mPmtId) {
         // Found PMT, parse it to get ES PIDs
-        parsePmt(lTsHeader, rSb);
+        if (!parsePmt(lTsHeader, rSb)) {
+            LOG(LogLevel::kWarning, "Failed to parse PMT");
+        }
     }
     else if (mEsFrames.find(lTsHeader.mPid) != mEsFrames.end()) {
-        // Found an ES PID, parse it, may contain the PCR as well
-        size_t sizeOfPesPayload = kTsPacketSize_188 - (rSb.pos() - lTSPacketStartPos);
-        parsePes(lTsHeader, lRandomAccessIndicator, rSb, sizeOfPesPayload);
-
-        if (rSb.pos() - lTSPacketStartPos != kTsPacketSize_188) {
-            if (streamInfoCallback != nullptr) {
-                streamInfoCallback(LogLevel::kWarning, "Didn't read the packet correct, bytes consumed: " +
-                                                           std::to_string(rSb.pos() - lTSPacketStartPos) +
-                                                           " expected: 188");
+        // Found an ES PID, parse it, may contain a PCR as well
+        if (kTsPacketSize_188 > rSb.pos() - lTSPacketStartPos) {
+            size_t sizeOfPesPayload = kTsPacketSize_188 - (rSb.pos() - lTSPacketStartPos);
+            if (!parsePes(lTsHeader, lRandomAccessIndicator, rSb, sizeOfPesPayload)) {
+                LOG(LogLevel::kWarning, "Failed to parse PES");
             }
         }
     }
 
     if (kTsPacketSize_188 < rSb.pos() - lTSPacketStartPos) {
-        if (streamInfoCallback != nullptr) {
-            streamInfoCallback(LogLevel::kWarning, "Read more than expected data from the packet, bytes consumed: " +
+        LOG(LogLevel::kWarning, "Read more than expected data from the packet, bytes consumed: " +
                                                    std::to_string(rSb.pos() - lTSPacketStartPos) +
                                                    " expected less than 188");
-        }
+    } else {
+        // Some functions might not consume the whole packet, which is ok, skip the rest
+        rSb.skip(kTsPacketSize_188 - (rSb.pos() - lTSPacketStartPos));
     }
-
-    // Some functions might not consume the whole packet, skip the rest
-    rSb.skip(kTsPacketSize_188 - (rSb.pos() - lTSPacketStartPos));
 }
 
-uint8_t MpegTsDemuxer::parseAdaptationField(const mpegts::TsHeader& rTsHeader, mpegts::SimpleBuffer& rSb) {
+bool MpegTsDemuxer::parseAdaptationField(const mpegts::TsHeader& rTsHeader, mpegts::SimpleBuffer& rSb, size_t bytesLeftInPacket, uint8_t& randomAccessIndicator) {
     uint8_t lDiscontinuityIndicator = 0;
-    uint8_t lRandomAccessIndicator = 0;
+    randomAccessIndicator = 0;
 
     if (rTsHeader.hasAdaptationField()) {
         AdaptationFieldHeader lAdaptionField;
         lAdaptionField.decode(rSb);
         lDiscontinuityIndicator = lAdaptionField.mDiscontinuityIndicator;
-        lRandomAccessIndicator = lAdaptionField.mRandomAccessIndicator;
+        randomAccessIndicator = lAdaptionField.mRandomAccessIndicator;
 
         if (lAdaptionField.mAdaptationFieldLength > 0) {
+            bytesLeftInPacket -= 2; // Decode of adaptation field with a length > 0 consumes 2 bytes
+            if (lAdaptionField.mAdaptationFieldLength > bytesLeftInPacket) {
+                LOG(LogLevel::kWarning, "Adaptation field length is larger than the remaining packet size, broken packet");
+                return false;
+            }
+
             if (shouldParsePCR(rTsHeader.mPid)) {
                 parsePcr(lAdaptionField, rSb);
             } else {
@@ -126,39 +134,60 @@ uint8_t MpegTsDemuxer::parseAdaptationField(const mpegts::TsHeader& rTsHeader, m
     }
     checkContinuityCounter(rTsHeader, lDiscontinuityIndicator);
 
-    return lRandomAccessIndicator;
+    return true;
 }
 
-void MpegTsDemuxer::parsePat(const TsHeader& rTsHeader, SimpleBuffer &rSb) {
+bool MpegTsDemuxer::parsePat(const TsHeader& rTsHeader, SimpleBuffer &rSb) {
     if (rTsHeader.mPayloadUnitStartIndicator == 0x01) {
         uint8_t lPointField = rSb.read1Byte();
-        if (lPointField != 0x00) {
-            if (streamInfoCallback != nullptr) {
-                streamInfoCallback(LogLevel::kWarning, "PAT pointer field is not 0x00");
+        rSb.skip(lPointField);
+
+        mPatHeader.decode(rSb);
+        if (mPatHeader.mSectionLength > 0x3FD) {
+            LOG(LogLevel::kWarning, "PAT section length is too large");
+            return false;
+        } else if (mPatHeader.mB0 != 0 || mPatHeader.mSectionSyntaxIndicator != 1) {
+            LOG(LogLevel::kWarning, "PAT section syntax is not as expected");
+            return false;
+        }
+
+        uint16_t bytesLeftMinusCRC32 = mPatHeader.mSectionLength - 5 - 4; // 5 bytes for the header, 5 bytes for CRC_32
+        while (bytesLeftMinusCRC32 >= 4) {
+            uint16_t programNumber = rSb.read2Bytes();
+            if (programNumber == 0) {
+                // Network PID, skip
+                rSb.skip(2);
+            } else {
+                mPmtId = rSb.read2Bytes() & 0x1fff;
+                mPatIsValid = true;
             }
+            bytesLeftMinusCRC32 -= 4;
+        }
+
+        rSb.skip(4); // Skip CRC_32
+
+        if (streamInfoCallback != nullptr) {
+            mPatHeader.print(LogLevel::kTrace, streamInfoCallback);
         }
     }
-
-    mPatHeader.decode(rSb);
-    rSb.read2Bytes();
-    mPmtId = rSb.read2Bytes() & 0x1fff;
-    mPatIsValid = true;
-
-    if (streamInfoCallback != nullptr) {
-        mPatHeader.print(LogLevel::kTrace, streamInfoCallback);
-    }
+    return mPatIsValid;
 }
 
-void MpegTsDemuxer::parsePmt(const TsHeader& rTsHeader, SimpleBuffer &rSb) {
+bool MpegTsDemuxer::parsePmt(const TsHeader& rTsHeader, SimpleBuffer &rSb) {
     if (rTsHeader.mPayloadUnitStartIndicator == 0x01) {
         uint8_t lPointField = rSb.read1Byte();
-        if (lPointField != 0x00) {
-            if (streamInfoCallback != nullptr) {
-                streamInfoCallback(LogLevel::kWarning, "PMT pointer field is not 0x00");
-            }
-        }
+        rSb.skip(lPointField);
 
         mPmtHeader.decode(rSb);
+
+        if (mPmtHeader.mSectionLength > 0x3FD) {
+            LOG(LogLevel::kWarning, "PMT section length is too large");
+            return false;
+        } else if (mPmtHeader.mB0 != 0 || mPmtHeader.mSectionSyntaxIndicator != 1) {
+            LOG(LogLevel::kWarning, "PMT section syntax is not as expected");
+            return false;
+        }
+
         mPcrId = mPmtHeader.mPcrPid;
         for (const std::shared_ptr<PMTElementInfo>& mInfo : mPmtHeader.mInfos) {
             mEsFrames[mInfo->mElementaryPid] = EsFrame(mInfo->mStreamType, mInfo->mElementaryPid);
@@ -171,9 +200,11 @@ void MpegTsDemuxer::parsePmt(const TsHeader& rTsHeader, SimpleBuffer &rSb) {
             mPmtHeader.print(LogLevel::kTrace, streamInfoCallback);
         }
     }
+
+    return mPmtIsValid;
 }
 
-void MpegTsDemuxer::parsePes(const mpegts::TsHeader& rTsHeader, uint8_t randomAccessIndicator, mpegts::SimpleBuffer& rSb, size_t payloadSize) {
+bool MpegTsDemuxer::parsePes(const mpegts::TsHeader& rTsHeader, uint8_t randomAccessIndicator, mpegts::SimpleBuffer& rSb, size_t payloadSize) {
     size_t lPesStartPos = rSb.pos();
 
     EsFrame& lEsFrame = mEsFrames[rTsHeader.mPid];
@@ -201,6 +232,10 @@ void MpegTsDemuxer::parsePes(const mpegts::TsHeader& rTsHeader, uint8_t randomAc
 
         PESHeader lPesHeader;
         lPesHeader.decode(rSb);
+        if (lPesHeader.mMarkerBits != 0x02) {
+            LOG(LogLevel::kWarning, "Corrupt PES header, marker bits not as expected");
+            return false;
+        }
 
         const size_t lPositionAfterPesHeaderDataLength = rSb.pos();
 
@@ -223,12 +258,18 @@ void MpegTsDemuxer::parsePes(const mpegts::TsHeader& rTsHeader, uint8_t randomAc
         // Skip the rest of the header data
         size_t bytesRead = rSb.pos() - lPositionAfterPesHeaderDataLength;
         if (bytesRead > lPesHeader.mHeaderDataLength) {
-            this->streamInfoCallback(LogLevel::kWarning, "Corrupt PES header, skipping packet");
-            return;
+            LOG(LogLevel::kWarning, "Corrupt PES header, skipping packet");
+            return false;
         }
         rSb.skip(lPesHeader.mHeaderDataLength - bytesRead);
     }
 
+    if (rSb.pos() - lPesStartPos > payloadSize) {
+        LOG(LogLevel::kWarning, "Read more PES data than expected, bytes read: " +
+                                std::to_string(rSb.pos() - lPesStartPos) +
+                                " payload size: " + std::to_string(payloadSize));
+        return false;
+    }
     size_t bytesLeftOfPayload = payloadSize - (rSb.pos() - lPesStartPos);
 
     lEsFrame.mData->append(rSb.currentData(), bytesLeftOfPayload);
@@ -242,6 +283,8 @@ void MpegTsDemuxer::parsePes(const mpegts::TsHeader& rTsHeader, uint8_t randomAc
         }
         lEsFrame.reset();
     }
+
+    return true;
 }
 
 void MpegTsDemuxer::parsePcr(const mpegts::AdaptationFieldHeader& rAdaptionField, mpegts::SimpleBuffer& rSb) const {

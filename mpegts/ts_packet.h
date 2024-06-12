@@ -27,7 +27,7 @@ public:
 
     ~EsFrame() = default;
 
-    bool empty();
+    [[nodiscard]] bool empty() const;
 
     void reset();
 
@@ -55,8 +55,8 @@ public:
 
     void decode(SimpleBuffer& rSb);
 
-    bool hasPayload() const;
-    bool hasAdaptationField() const;
+    [[nodiscard]] bool hasPayload() const;
+    [[nodiscard]] bool hasAdaptationField() const;
 
     uint8_t mSyncByte = kTsPacketSyncByte;   // 8 bits
     uint8_t mTransportErrorIndicator = 0;    // 1 bit
@@ -127,7 +127,7 @@ public:
 
     void decode(SimpleBuffer& rSb);
 
-    uint16_t size();
+    [[nodiscard]] uint16_t size() const;
 
     void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
 
