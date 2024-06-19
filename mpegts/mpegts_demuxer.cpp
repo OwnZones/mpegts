@@ -124,7 +124,7 @@ bool MpegTsDemuxer::parseAdaptationField(const mpegts::TsHeader& rTsHeader, mpeg
                 return false;
             }
 
-            if (shouldParsePCR(rTsHeader.mPid)) {
+            if (shouldParsePcr(rTsHeader.mPid)) {
                 parsePcr(lAdaptionField, rSb);
             } else {
                 // Just skip the adaptation field, -1 for the byte following the length field
@@ -242,16 +242,16 @@ bool MpegTsDemuxer::parsePes(const mpegts::TsHeader& rTsHeader, uint8_t randomAc
         lEsFrame.mStreamId = lPesHeader.mStreamId;
         lEsFrame.mExpectedPesPacketLength = lPesHeader.mPesPacketLength;
         if (lPesHeader.mPtsDtsFlags == 0x02) {
-            lEsFrame.mPts = lEsFrame.mDts = readPts(rSb);
+            lEsFrame.mPts = readPts(rSb);
+            lEsFrame.mDts = lEsFrame.mPts;
         } else if (lPesHeader.mPtsDtsFlags == 0x03) {
             lEsFrame.mPts = readPts(rSb);
-            // readPts function reads a "timestamp", so we use it for DTS as well
+            // readPts function reads a "PTS", but the bitstream syntax is the same for DTS
             lEsFrame.mDts = readPts(rSb);
         }
 
         if (lPesHeader.mPesPacketLength != 0) {
             size_t payloadLength = lPesHeader.mPesPacketLength - 3 - lPesHeader.mHeaderDataLength;
-
             lEsFrame.mExpectedPayloadLength = payloadLength;
         }
 
@@ -301,9 +301,10 @@ void MpegTsDemuxer::parsePcr(const mpegts::AdaptationFieldHeader& rAdaptionField
     rSb.skip(rAdaptionField.mAdaptationFieldLength - bytesRead);
 }
 
-bool MpegTsDemuxer::shouldParsePCR(uint16_t pid) const {
+bool MpegTsDemuxer::shouldParsePcr(uint16_t pid) const {
     return pcrOutCallback != nullptr && mPcrId != 0 && pid == mPcrId;
 }
+
 void MpegTsDemuxer::checkContinuityCounter(const TsHeader &rTsHeader, uint8_t discontinuityIndicator) {
     uint16_t pid = rTsHeader.mPid;
     if (pid == 0x1FFF) {
