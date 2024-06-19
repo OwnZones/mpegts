@@ -16,13 +16,13 @@ void writePts(SimpleBuffer &rSb, uint32_t lFb, uint64_t lPts) {
     uint32_t lVal;
 
     lVal = lFb << 4 | (((lPts >> 30) & 0x07) << 1) | 1;
-    rSb.write1Byte((int8_t) lVal);
+    rSb.write1Byte((uint8_t) lVal);
 
     lVal = (((lPts >> 15) & 0x7fff) << 1) | 1;
-    rSb.write2Bytes((int16_t) lVal);
+    rSb.write2Bytes((uint16_t) lVal);
 
     lVal = (((lPts) & 0x7fff) << 1) | 1;
-    rSb.write2Bytes((int16_t) lVal);
+    rSb.write2Bytes((uint16_t) lVal);
 }
 
 uint64_t readPts(SimpleBuffer &rSb) {

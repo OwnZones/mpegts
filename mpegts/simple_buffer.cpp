@@ -1,66 +1,63 @@
 #include "simple_buffer.h"
-#include <assert.h>
+
+#include <cstring>
 #include <iterator>
+
+#include <cassert>
 
 namespace mpegts {
 
-SimpleBuffer::SimpleBuffer()
-    : mPos(0)
-{
-}
+SimpleBuffer::SimpleBuffer() = default;
 
 SimpleBuffer::SimpleBuffer(int32_t size, int8_t value)
-    : mPos(0)
 {
     mData = std::vector<uint8_t>(size, value);
 }
 
-SimpleBuffer::~SimpleBuffer()
-{
-}
+SimpleBuffer::~SimpleBuffer() = default;
 
-void SimpleBuffer::write1Byte(int8_t val)
+void SimpleBuffer::write1Byte(uint8_t val)
 {
     mData.push_back(val);
 }
 
-void SimpleBuffer::write2Bytes(int16_t val)
+void SimpleBuffer::write2Bytes(uint16_t val)
 {
-    char *p = (char *)&val;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 1; i >= 0; --i) {
         mData.push_back(p[i]);
     }
 }
 
-void SimpleBuffer::write3Bytes(int32_t val)
+void SimpleBuffer::write3Bytes(uint32_t val)
 {
-    char *p = (char *)&val;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 2; i >= 0; --i) {
         mData.push_back(p[i]);
     }
 }
 
-void SimpleBuffer::write4Bytes(int32_t val)
+void SimpleBuffer::write4Bytes(uint32_t val)
 {
-    char *p = (char *)&val;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 3; i >= 0; --i) {
         mData.push_back(p[i]);
     }
 }
 
-void SimpleBuffer::write8Bytes(int64_t val)
+void SimpleBuffer::write8Bytes(uint64_t val)
 {
-    char *p = (char *)&val;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 7; i >= 0; --i) {
         mData.push_back(p[i]);
     }
 }
 
-void SimpleBuffer::append(const uint8_t* bytes, int size)
+void SimpleBuffer::append(const uint8_t* bytes, size_t size)
 {
     if (!bytes || size <= 0) {
 #ifdef DEBUG
@@ -72,7 +69,7 @@ void SimpleBuffer::append(const uint8_t* bytes, int size)
     mData.insert(mData.end(), bytes, bytes + size);
 }
 
-void SimpleBuffer::prepend(const uint8_t* bytes, int size)
+void SimpleBuffer::prepend(const uint8_t* bytes, size_t size)
 {
     if (!bytes || size <= 0) {
 #ifdef DEBUG
@@ -84,22 +81,22 @@ void SimpleBuffer::prepend(const uint8_t* bytes, int size)
     mData.insert(mData.begin(), bytes, bytes + size);
 }
 
-int8_t SimpleBuffer::read1Byte()
+uint8_t SimpleBuffer::read1Byte()
 {
     assert(require(1));
 
-    int8_t val = mData.at(0 + mPos);
+    uint8_t val = mData.at(0 + mPos);
     mPos++;
 
     return val;
 }
 
-int16_t SimpleBuffer::read2Bytes()
+uint16_t SimpleBuffer::read2Bytes()
 {
     assert(require(2));
 
-    int16_t val = 0;
-    char *p = (char *)&val;
+    uint16_t val = 0;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 1; i >= 0; --i) {
         p[i] = mData.at(0 + mPos);
@@ -109,12 +106,12 @@ int16_t SimpleBuffer::read2Bytes()
     return val;
 }
 
-int32_t SimpleBuffer::read3Bytes()
+uint32_t SimpleBuffer::read3Bytes()
 {
     assert(require(3));
 
-    int32_t val = 0;
-    char *p = (char *)&val;
+    uint32_t val = 0;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 2; i >= 0; --i) {
         p[i] = mData.at(0 + mPos);
@@ -124,12 +121,12 @@ int32_t SimpleBuffer::read3Bytes()
     return val;
 }
 
-int32_t SimpleBuffer::read4Bytes()
+uint32_t SimpleBuffer::read4Bytes()
 {
     assert(require(4));
 
     int32_t val = 0;
-    char *p = (char *)&val;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 3; i >= 0; --i) {
         p[i] = mData.at(0 + mPos);
@@ -139,12 +136,12 @@ int32_t SimpleBuffer::read4Bytes()
     return val;
 }
 
-int64_t SimpleBuffer::read8Bytes()
+uint64_t SimpleBuffer::read8Bytes()
 {
     assert(require(8));
 
-    int64_t val = 0;
-    char *p = (char *)&val;
+    uint64_t val = 0;
+    uint8_t *p = reinterpret_cast<uint8_t*>(&val);
 
     for (int i = 7; i >= 0; --i) {
         p[i] = mData.at(0 + mPos);
@@ -154,46 +151,56 @@ int64_t SimpleBuffer::read8Bytes()
     return val;
 }
 
-std::string SimpleBuffer::readString(int len)
+std::string SimpleBuffer::readString(size_t len)
 {
     assert(require(len));
 
-    std::string val(*(char*)&mData[0] + mPos, len);
+    std::string val(reinterpret_cast<char*>(&mData.at(mPos)), len);
     mPos += len;
 
     return val;
 }
 
-void SimpleBuffer::skip(int size)
+void SimpleBuffer::skip(size_t size)
 {
     mPos += size;
 }
 
-bool SimpleBuffer::require(int required_size)
+bool SimpleBuffer::require(size_t required_size) const
 {
     assert(required_size >= 0);
 
     return required_size <= mData.size() - mPos;
 }
 
-bool SimpleBuffer::empty()
+bool SimpleBuffer::empty() const
 {
     return mPos >= mData.size();
 }
 
-int SimpleBuffer::size()
+size_t SimpleBuffer::size() const
 {
     return mData.size();
 }
 
-int SimpleBuffer::pos()
+size_t SimpleBuffer::pos() const
 {
     return mPos;
 }
 
 uint8_t* SimpleBuffer::data()
 {
-    return (size() == 0) ? nullptr : &mData[0];
+    return mData.empty() ? nullptr : &mData[0];
+}
+
+uint8_t* SimpleBuffer::currentData()
+{
+    return (mData.empty() || mPos >= mData.size()) ? nullptr : &mData[mPos];
+}
+
+size_t SimpleBuffer::dataLeft() const
+{
+    return mData.size() - mPos;
 }
 
 void SimpleBuffer::clear()
@@ -202,7 +209,7 @@ void SimpleBuffer::clear()
     mData.clear();
 }
 
-void SimpleBuffer::setData(int pos, const uint8_t* data, int len)
+void SimpleBuffer::setData(size_t pos, const uint8_t* data, size_t len)
 {
     if (!data) {
 #ifdef DEBUG
@@ -218,9 +225,7 @@ void SimpleBuffer::setData(int pos, const uint8_t* data, int len)
         return;
     }
 
-    for (int i = 0; i < len; i++) {
-        mData[pos + i] = data[i];
-    }
+    std::memcpy(currentData(), data, len);
 }
 
 }

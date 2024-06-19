@@ -16,19 +16,22 @@
 
 namespace mpegts {
 
+static constexpr size_t kTsPacketSize_188 = 188;
+static constexpr uint8_t kTsPacketSyncByte = 0x47;
+
 class EsFrame final {
 public:
-    EsFrame();
+    EsFrame() = default;
 
     EsFrame(uint8_t streamType, uint16_t pid);
 
     ~EsFrame() = default;
 
-    bool empty();
+    [[nodiscard]] bool empty() const;
 
     void reset();
 
-    std::shared_ptr<SimpleBuffer> mData;
+    std::shared_ptr<SimpleBuffer> mData = std::make_shared<SimpleBuffer>();
     uint64_t mPts = 0;
     uint64_t mDts = 0;
     uint64_t mPcr = 0;
@@ -44,18 +47,18 @@ public:
 
 class TsHeader final {
 public:
-    TsHeader();
+    TsHeader() = default;
 
-    ~TsHeader();
+    ~TsHeader() = default;
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
-    bool hasPayload() const;
-    bool hasAdaptationField() const;
+    [[nodiscard]] bool hasPayload() const;
+    [[nodiscard]] bool hasAdaptationField() const;
 
-    uint8_t mSyncByte = 0x47;                // 8 bits
+    uint8_t mSyncByte = kTsPacketSyncByte;   // 8 bits
     uint8_t mTransportErrorIndicator = 0;    // 1 bit
     uint8_t mPayloadUnitStartIndicator = 0;  // 1 bit
     uint8_t mTransportPriority = 0;          // 1 bit
@@ -67,15 +70,15 @@ public:
 
 class PATHeader final {
 public:
-    PATHeader();
+    PATHeader() = default;
 
-    ~PATHeader();
+    ~PATHeader() = default;
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
-    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
+    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) const;
 
     uint8_t mTableId = 0;                // 8 bits
     uint8_t mSectionSyntaxIndicator = 0; // 1 bit
@@ -92,19 +95,19 @@ public:
 
 class PMTElementInfo final {
 public:
-    PMTElementInfo();
+    PMTElementInfo() = default;
 
     PMTElementInfo(uint8_t lSt, uint16_t lPid);
 
-    ~PMTElementInfo();
+    ~PMTElementInfo() = default;
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
-    uint16_t size();
+    [[nodiscard]] uint16_t size() const;
 
-    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
+    void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback) const;
 
     uint8_t mStreamType = 0;     // 8 bits
     uint8_t mReserved0 = 0x7;    // 3 bits
@@ -116,15 +119,15 @@ public:
 
 class PMTHeader final {
 public:
-    PMTHeader();
+    PMTHeader() = default;
 
-    ~PMTHeader();
+    ~PMTHeader() = default;
 
     void encode(SimpleBuffer& rSb);
 
     void decode(SimpleBuffer& rSb);
 
-    uint16_t size();
+    [[nodiscard]] uint16_t size() const;
 
     void print(LogLevel logLevel, const std::function<void(LogLevel level, const std::string&)>& streamInfoCallback);
 
@@ -148,11 +151,11 @@ public:
 
 class AdaptationFieldHeader final {
 public:
-    AdaptationFieldHeader();
+    AdaptationFieldHeader() = default;
 
-    ~AdaptationFieldHeader();
+    ~AdaptationFieldHeader() = default;
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
@@ -169,11 +172,11 @@ public:
 
 class PESHeader final {
 public:
-    PESHeader();
+    PESHeader() = default;
 
-    ~PESHeader();
+    ~PESHeader() = default;
 
-    void encode(SimpleBuffer& rSb);
+    void encode(SimpleBuffer& rSb) const;
 
     void decode(SimpleBuffer& rSb);
 
